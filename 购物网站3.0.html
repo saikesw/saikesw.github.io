@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物网站</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        .product {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+            margin: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .product img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        .product h2 {
+            margin-bottom: 10px;
+        }
+        .product button {
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .product button:hover {
+            background-color: #0056B3;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        .modal h3 {
+            margin-top: 0;
+        }
+        .modal button {
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .modal button:hover {
+            background-color: #0056B3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="product-container">
+        <div class="product">
+            <img src="https://img12.360buyimg.com/n1/jfs/t1/111052/32/28371/102217/62f1ffc7Ee32fe22e/2d45dd25d12f2879.jpg" alt="特价商品">
+            <h2>茶杯</h2>
+            <button onclick="showConfirmation('https://item.jd.com/10049845791362.html?cu=true&utm_source=wk.idey.cn&utm_medium=tuiguang&utm_campaign=t_2024175271_&utm_term=40efd8c8378d434cbad6abedf44c94e4')">购买</button>
+        </div>
+        <div class="product">
+            <img src="https://img10.360buyimg.com/n1/jfs/t1/101147/24/41376/188474/64b25823F3a6ec8cd/436fe215b0fedae7.jpg" alt="特价商品">
+            <h2>风扇</h2>
+            <button onclick="showConfirmation('https://item.jd.com/100018967765.html?cu=true&utm_source=wk.idey.cn&utm_medium=tuiguang&utm_campaign=t_2024175271_&utm_term=ec5a561e2f504c69a28e209e508fb68d')">购买</button>
+        </div>
+        <div class="product">
+            <img src="https://img13.360buyimg.com/n1/jfs/t1/170667/4/38190/117324/64b4f0beFc66d3914/e3d85e5970f15883.jpg" alt="特价商品">
+            <h2>卫生纸</h2>
+            <button onclick="showConfirmation('https://union-click.jd.com/jdc?e=&p=JF8BAR8JK1olXwQAVFhbDEwQBl8IGloUXw8EXF5YCUknRzBQRQQlBENHFRxWFlVPRjtUBABAQlRcCEBdCUoWAWYOE1sQXAQdDRsBVUVFR2NNWB9BbXAAHz4jQBBOYxh2RR5cXANjFl4NcR0bD18NG1oUWgMEUF5aOEgWAGoIHV8WWwYyZF5cOAl51Pq0zOCAHFtGFofrk5K2l7uDvWsUbQYFXVdUCEMQC2YLG1wlXQ4GZIrpup2ElbaHlI2w2dKe9Yr5v5-sk184K1glbTYCZF1tViUWUGkKG14SXWhfDxsWV0xcWAEPGFsUXQEKVFhtCkoWAW04K2t3NUJfKzwebDgeaxZzaC1WWE5wEysBbQN5AQ9uTi5-GGNbJxYlCTh8YDtYKw')">购买</button>
+        </div>
+        <div class="product">
+            <img src="https://img11.360buyimg.com/n1/jfs/t1/118454/22/39408/84424/64a3bab2Fc2870322/56c5253eff2e5bf7.jpg" alt="特价商品">
+            <h2>蓝牙耳机</h2>
+            <button onclick="showConfirmation('https://item.jd.com/10035789319416.html?cu=true&utm_source=wk.idey.cn&utm_medium=tuiguang&utm_campaign=t_2024175271_&utm_term=e65e75c8eb9e4e3599ba5f3573514833')">购买</button>
+        </div>
+    </div>
+    <div class="modal" id="confirmation-modal">
+        <h3>警告</h3>
+        <p>该服务由“京东”提供，所有法律责任均由京东承担，我们不负任何法律责任</p>
+        <button onclick="closeModal()">关闭</button>
+    </div>
+    <script>
+        function showConfirmation(url) {
+            let modal = document.getElementById('confirmation-modal');
+            modal.style.display = 'block';
+            modal.onclick = function (event) {
+                event.stopPropagation();
+            };
+            document.body.style.overflow = 'hidden';
+
+            let closeButton = modal.querySelector('button');
+            closeButton.onclick = function () {
+                closeModal();
+                window.location.href = url;
+            };
+        }
+
+        function closeModal() {
+            let modal = document.getElementById('confirmation-modal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function appendProducts() {
+            let container = document.getElementById('product-container');
+            let products = container.innerHTML;
+            container.innerHTML += products;
+        }
+
+        window.onscroll = function () {
+            let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            let windowHeight = document.documentElement.clientHeight || document.body.clientHeight;
+            let scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+            if (scrollTop + windowHeight >= scrollHeight) {
+                appendProducts();
+            }
+        };
+    </script>
+</body>
+</html>
