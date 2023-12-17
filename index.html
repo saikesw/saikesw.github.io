@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九六班班级网站</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        .popup {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: blue;
+            color: white;
+            font-size: 20px;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        .content {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .confirmation {
+            background-color: orange;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="popup" id="popup">
+    <div class="content">
+        <p>这个网站是吴旺泽自主搭建的，该网站为九六班班级网站，该网站有九六班所有同学。</p>
+    </div>
+    <button onclick="confirmPopup()">确认</button>
+</div>
+
+<div class="confirmation" id="confirmation">
+    <p>九六班网站创建者：吴旺泽</p>
+    <p>九六班的学生：九六班全体学生（人数太多不一 一 列举）</p>
+    <p>九六班的老师：语文:李春霞老师  数学：杨文静老师  英语：张青老师  物理：司慕浩老师  化学：岳田老师  历史：郭庆河老师  政治：宋智林老师</p>
+    <p>九六班班长：张昊泽</p>
+    <p>九六班的荣誉：小步操三等奖</p>
+    <!-- 在这里可以添加学生名单或其他内容 -->
+</div>
+
+<script>
+    function confirmPopup() {
+        document.getElementById('popup').style.display = 'none';
+        document.getElementById('confirmation').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
