@@ -1,144 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天气程序</title>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+    <title>WWZ-AI</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .weather-container {
-            position: relative;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            text-align: center;
-        }
-
-        .weather-info {
-            background-color: #3498db;
-            color: #fff;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 10px 0;
-        }
-
-        .add-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            cursor: pointer;
-            font-size: 24px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            text-align: center;
-        }
-
-        input {
-            margin-bottom: 10px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .modal-buttons {
-            margin-top: 10px;
-        }
-
-        h1 {
-            color: #3498db;
-        }
-
-        span {
-            font-weight: bold;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+      }
+      .topbar {
+        width: 100%;
+        min-width: 600px;
+        height: 60px;
+        background-color: #ff8c00; /* 橙色 */
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .chatbox {
+        width: 100%; /* 与屏幕一样宽 */
+        height: 360px;
+        margin: 20px auto;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 5px 1px #ff8c00; /* 橙色 */
+      }
+      .chat {
+        width: 100%; /* 与屏幕一样宽 */
+        height: 300px;
+        padding: 20px;
+        overflow: auto;
+      }
+      hr {
+        height: 1px;
+        border: none;
+        background-color: #ff8c0067; /* 橙色 */
+      }
+      .chatbox button {
+        width: 40px;
+        height: 40px;
+        position: relative;
+        margin: 9px 9px 9px calc(100% - 49px);
+        background-color: #ff8c00; /* 橙色 */
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button svg {
+        margin: 10px;
+      }
+      .input-container {
+        width: 100%; /* 与屏幕一样宽 */
+        height: 160px;
+        margin: 20px auto;
+        border-radius: 10px;
+        background-color: #fff;
+        box-shadow: 0 0 5px 1px #ff8c00; /* 橙色 */
+      }
+      .input-container textarea {
+        width: 100%;
+        height: 100px;
+        border-radius: 10px;
+        padding: 20px;
+        font-weight: 800;
+        outline: none;
+        border: none;
+        resize: none;
+      }
+      .lastbox {
+        width: 100%;
+        height: 56px;
+        display: flex;
+      }
+      .model-container {
+        position: relative;
+        margin: auto auto auto 9px;
+      }
+      select {
+        width: 200px;
+        height: 40px;
+        padding: 0 10px;
+        border-radius: 10px;
+        border: 1px solid #ff8c00; /* 橙色 */
+        outline: none;
+        font-size: 14px;
+      }
+      select option {
+        padding: 8px;
+        line-height: 1.5;
+      }
+      .input-container button {
+        width: 40px;
+        height: 40px;
+        position: relative;
+        margin: auto 9px auto auto;
+        background-color: #ff8c00; /* 橙色 */
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
     </style>
-</head>
-<body>
-    <div class="weather-container">
-        <h1>吴旺泽天气程序</h1>
-        <div class="add-button" onclick="openModal()">+</div>
-        <div class="weather-info" id="locationInfo"></div>
-        <div class="weather-info">温度: <span id="temperature"></span> °C</div>
-        <div class="weather-info">天气状况: <span id="weatherCondition"></span></div>
-        <div class="weather-info">风速: <span id="windSpeed"></span> m/s</div>
-        <div class="weather-info">风力等级: <span id="windForce"></span></div>
-        <div class="weather-info">日出时间: <span id="sunriseTime"></span></div>
-        <div class="weather-info">日落时间: <span id="sunsetTime"></span></div>
-    </div>
-
-    <div class="modal" id="myModal">
-        <label for="locationInput">请输入地区:</label>
-        <input type="text" id="locationInput">
-        <div class="modal-buttons">
-            <button onclick="addLocation()">确定</button>
-            <button onclick="closeModal()">取消</button>
-        </div>
-    </div>
-
+  </head>
+  <body>
     <script>
-        function getRandomNumber(min, max) {
-            return (Math.random() * (max - min) + min).toFixed(2);
-        }
-
-        function getRandomWeatherCondition() {
-            const conditions = ['世界末日', '紫色雷电','白虹贯日','绿色风暴','台风','太阳爆炸','宇宙爆炸','银河系爆炸','100²级地震',];
-            return conditions[Math.floor(Math.random() * conditions.length)];
-        }
-
-        function getRandomTime() {
-            const hours = Math.floor(Math.random() * 24);
-            const minutes = Math.floor(Math.random() * 60);
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        }
-
-        function openModal() {
-            document.getElementById('myModal').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('myModal').style.display = 'none';
-        }
-
-        function addLocation() {
-            const locationInput = document.getElementById('locationInput');
-            const location = locationInput.value;
-            if (location) {
-                // Display only the latest location
-                document.getElementById('locationInfo').innerHTML = `地区: <span>${location}</span>`;
-
-                // Update weather data with more extreme values
-                document.getElementById('temperature').innerText = getRandomNumber(150, 300);
-                document.getElementById('weatherCondition').innerText = getRandomWeatherCondition();
-                document.getElementById('windSpeed').innerText = getRandomNumber(10, 30);
-                document.getElementById('windForce').innerText = Math.floor(getRandomNumber(6, 12));
-                document.getElementById('sunriseTime').innerText = getRandomTime();
-                document.getElementById('sunsetTime').innerText = getRandomTime();
-                
-                // Close the modal
-                closeModal();
-            }
-        }
+      var activationCode = prompt("请输入激活码：");
+      if (activationCode !== "wwz-333409") {
+        alert("激活码错误，跳转到百度首页");
+        window.location.href = "http://www.baidu.com";
+      }
     </script>
-</body>
+    <div class="topbar">
+      <h1>WWZ-AI</h1>
+    </div>
+    <div class="chatbox">
+      <div class="chat" id="chat-box"></div>
+      <hr />
+      <button onclick="clearConversation()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="input-container">
+      <textarea
+        type="text"
+        id="user-input"
+        placeholder="请在这里输入"
+      ></textarea>
+      <hr />
+      <div class="lastbox">
+        <div class="model-container">
+          <select id="model-selector" onchange="changeModel()">
+            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+            <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
+            <option value="gpt-4">gpt-4</option>
+            <option value="gpt-4-browsing">gpt-4-browsing</option>
+            <option value="gpt-4-dalle">gpt-4-dalle</option>
+            <option value="gpt-4-32k">gpt-4-32k</option>
+          </select>
+        </div>
+        <button onclick="sendMessage()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <script>
+      var conversation = [
+        { role: "system", content: "You are a helpful assistant." },
+      ];
+      var selectedModel = "gpt-3.5-turbo";
+      function sendMessage() {
+        var userInput = document.getElementById("user-input").value;
+        appendMessage("您", userInput);
+        setTimeout(function () {
+          typeWriter("AI正在思考中...", "bot"); // 显示“AI正在思考中...” 0.5秒延迟
+        }, 200);
+        conversation.push({
+          role: "user",
+          content: userInput,
+        });
+        var model = selectedModel;
+        var requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer sk-DrRyxydURFyl1jLfHlbloDT066Uf4Y2euI8zhcaTELX7HPUB ",
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: conversation,
+            stream: false,
+            temperature: 0.5,
+            max_tokens: 2048,
+          }),
+        };
+        fetch(
+          "https://api.gptgod.online/v1/chat/completions",
+          requestOptions
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            var botResponse = data.choices[0].message.content;
+            setTimeout(function () {
+              typeWriter("AI：" + botResponse, "bot");
+              conversation.push({
+                role: "assistant",
+                content: botResponse,
+              });
+            }, 1500);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            appendErrorMessage("出现错误：" + error);
+          });
+        document.getElementById("user-input").value = "";
+      }
+      function typeWriter(text, sender) {
+        var chatBox = document.getElementById("chat-box");
+        var messageDiv = document.createElement("div");
+        messageDiv.className = sender;
+        var typingSpan = document.createElement("span");
+        typingSpan.className = "typing";
+        typingSpan.innerHTML = text;
+        messageDiv.appendChild(typingSpan);
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+      function appendMessage(sender, message) {
+        var chatBox = document.getElementById("chat-box");
+        var messageDiv = document.createElement("div");
+        messageDiv.className = sender;
+        messageDiv.innerHTML = "<strong>" + sender + ":</strong> " + message;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+      function appendErrorMessage(message) {
+        var chatBox = document.getElementById("chat-box");
+        var errorDiv = document.createElement("div");
+        errorDiv.className = "error";
+        errorDiv.innerHTML = "<strong>Error:</strong> " + message;
+        chatBox.appendChild(errorDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+      function changeModel() {
+        clearConversation();
+        selectedModel = document.getElementById("model-selector").value;
+      }
+      function clearConversation() {
+        conversation = [];
+        document.getElementById("chat-box").innerHTML = "";
+      }
+      document
+        .getElementById("user-input")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+          }
+        });
+    </script>
+  </body>
 </html>
