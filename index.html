@@ -145,12 +145,8 @@
       <div class="lastbox">
         <div class="model-container">
           <select id="model-selector" onchange="changeModel()">
-            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-            <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
-            <option value="gpt-4">gpt-4</option>
-            <option value="gpt-4-browsing">gpt-4-browsing</option>
-            <option value="gpt-4-dalle">gpt-4-dalle</option>
-            <option value="gpt-4-32k">gpt-4-32k</option>
+            <option value="gpt-3.5-turbo">gpt-4-32k</option>
+            <option value="gpt-3.5-turbo-16k">gpt-4-128k</option>
           </select>
         </div>
         <button onclick="sendMessage()">
@@ -186,7 +182,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer sk-DrRyxydURFyl1jLfHlbloDT066Uf4Y2euI8zhcaTELX7HPUB ",
+            Authorization: "Bearer sk-XaKxAAzpVvipshgAMl48PskVe701rQE3TxukNXlwPg2G6xpF ",
           },
           body: JSON.stringify({
             model: model,
