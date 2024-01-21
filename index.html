@@ -145,8 +145,9 @@
       <div class="lastbox">
         <div class="model-container">
           <select id="model-selector" onchange="changeModel()">
-            <option value="gpt-3.5-turbo">GPT-4-32K</option>
-            <option value="gpt-3.5-turbo-16k">GPT-4-1106-Preview</option>
+            <option value="gpt-3.5-turbo">GPT-4</option>
+            <option value="gpt-3.5-turbo-16k">GPT-4-联网</option>
+            <option value="gpt-3.5-turbo">NewBing</option>
           </select>
         </div>
         <button onclick="sendMessage()">
@@ -182,7 +183,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer sk-znJKq7vMI5lmlfoyvtGWQs37bc95nW0DddbCRx48rAQOCW9r ",
+            Authorization: "Bearer  ",
           },
           body: JSON.stringify({
             model: model,
@@ -193,7 +194,7 @@
           }),
         };
         fetch(
-          "https://api.gptgod.online/v1/chat/completions",
+          "https://lhybosco-bingo.hf.space/openai/v1/chat/completions",
           requestOptions
         )
           .then((response) => response.json())
