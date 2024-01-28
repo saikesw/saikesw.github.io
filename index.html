@@ -1,1 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>头孢大学</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: url('https://th.bing.com/th/id/OIG1.wkZWfng9Tnxws1ct1l2_?pid=ImgGn') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            text-align: center;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 40px;
+        }
+
+        #info-section {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            z-index: 1;
+        }
+
+        section {
+            margin: 10px;
+            display: inline-block;
+        }
+
+        .button {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #enrollment-popup,
+        #enrollment-success-popup,
+        #image-section,
+        #intro-popup,
+        #intro-popup button {
+            display: none;
+        }
+
+        #enrollment-popup,
+        #intro-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2;
+        }
+
+        #enrollment-popup,
+        #intro-popup {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            text-align: left;
+            color: black;
+        }
+
+        #intro-popup {
+            width: 60vw;
+            max-width: 600px;
+        }
+
+        #intro-popup p {
+            font-size: 20px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        #intro-popup button {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        #intro-popup button.slider-button-close {
+            margin-top: 10px;
+        }
+
+        #enrollment-popup label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #enrollment-popup input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        #enrollment-popup button {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+        }
+
+        #image-section {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2;
+        }
+
+        #image-section button,
+        #image-section button.slider-button-close {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 0 5px;
+        }
+
+        #image-section .slider-button-close {
+            margin-top: 20px;
+        }
+
+        #image-slider {
+            width: 60vw;
+            max-width: 600px;
+            height: 60vh;
+            max-height: 600px;
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        #image-slider img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        头孢大学
+    </header>
+
+    <div id="info-section">
+        一直被模仿，从未被超越
+    </div>
+
+    <section>
+        <button class="button" onclick="showEnrollmentPopup()">招生板块</button>
+    </section>
+
+    <section>
+        <button class="button" onclick="showPresidentContact()">校长联系方式</button>
+    </section>
+
+    <section>
+        <button class="button" onclick="showIntroPopup()">学校简介</button>
+    </section>
+
+    <section>
+        <button class="button" onclick="showImageSlider()">学校图片</button>
+    </section>
+
+    <div id="enrollment-popup">
+        <label for="name">姓名:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="contact">联系方式:</label>
+        <input type="text" id="contact" name="contact" required><br>
+
+        <label for="score">头孢大学自主招生考试成绩:</label>
+        <input type="text" id="score" name="score" required><br>
+
+        <button type="button" class="button" onclick="submitEnrollment()">确定</button>
+        <button type="button" class="button slider-button-close" onclick="hidePopup()">关闭</button>
+    </div>
+
+    <div id="enrollment-success-popup">
+        <p>已发送</p>
+        <button class="button" onclick="hidePopup()">关闭</button>
+    </div>
+
+    <div id="intro-popup">
+        <p>
+            盘古开天辟地之后，众神之王头孢在头孢帝国建立此校，并担任该校校长，一直担任至今，头孢大学为宇宙顶尖高校。
+        </p>
+        <button class="button slider-button-close" onclick="hidePopup()">关闭</button>
+    </div>
+
+    <div id="image-section">
+        <div id="image-slider">
+            <img src="https://th.bing.com/th/id/OIG1.IbyY.jdNSygspTJGeKq9?pid=ImgGn" alt="学校图片1">
+            <img src="https://th.bing.com/th/id/OIG1.noXVdFRyb5vjJbmfd0rq?pid=ImgGn" alt="学校图片2">
+            <img src="https://th.bing.com/th/id/OIG1.x8rZactS0aW4zqjlXob1?pid=ImgGn" alt="学校图片3">
+            <img src="https://th.bing.com/th/id/OIG2.0Xa7HbfDvOMzuI9NrIWb?pid=ImgGn" alt="学校图片4">
+            <img src="https://th.bing.com/th/id/OIG2.dND.4aiRiJqx4iU4UEcG?pid=ImgGn" alt="学校图片5">
+            <img src="https://th.bing.com/th/id/OIG2.SPwClrPEJi9EGYxjynYB?pid=ImgGn" alt="学校图片6">
+            <img src="https://th.bing.com/th/id/OIG4.r7MpuTJz89yiABAI7x.q?pid=ImgGn" alt="学校图片7">
+        </div>
+        <button class="button slider-button slider-button-left" onclick="prevImage()">上一张</button>
+        <button class="button slider-button slider-button-close" onclick="hidePopup()">关闭</button>
+        <button class="button slider-button slider-button-right" onclick="nextImage()">下一张</button>
+    </div>
+
+    <script>
+        function showEnrollmentPopup() {
+            hidePopups();
+            document.getElementById('enrollment-popup').style.display = 'block';
+        }
+
+        function submitEnrollment() {
+            hidePopups();
+            document.getElementById('enrollment-success-popup').style.display = 'block';
+        }
+
+        function showPresidentContact() {
+            hidePopups();
+            alert('校长联系方式：QQ：3334094689');
+        }
+
+        function showIntroPopup() {
+            hidePopups();
+            document.getElementById('intro-popup').style.display = 'block';
+        }
+
+        function showImageSlider() {
+            hidePopups();
+            document.getElementById('image-section').style.display = 'block';
+        }
+
+        function hidePopup() {
+            hidePopups();
+        }
+
+        function hidePopups() {
+            document.getElementById('enrollment-popup').style.display = 'none';
+            document.getElementById('enrollment-success-popup').style.display = 'none';
+            document.getElementById('intro-popup').style.display = 'none';
+            document.getElementById('image-section').style.display = 'none';
+        }
+
+        let currentImageIndex = 0;
+
+        function prevImage() {
+            showImage(currentImageIndex - 1);
+        }
+
+        function nextImage() {
+            showImage(currentImageIndex + 1);
+        }
+
+        function showImage(index) {
+            const images = document.querySelectorAll('#image-slider img');
+            currentImageIndex = (index + images.length) % images.length;
+
+            images.forEach((image, i) => {
+                image.style.display = i === currentImageIndex ? 'block' : 'none';
+            });
+
+            // 更新关闭按钮的位置和显示
+            updateCloseButton();
+        }
+
+        function updateCloseButton() {
+            const closeButton = document.querySelector('.slider-button-close');
+            const imageSection = document.getElementById('image-section');
+            closeButton.style.left = `${imageSection.offsetWidth / 2}px`;
+            closeButton.style.bottom = '10px';
+        }
+    </script>
+</body>
+
+</html>
 
