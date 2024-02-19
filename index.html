@@ -109,8 +109,15 @@
         cursor: pointer;
       }
     </style>
-
-
+  </head>
+  <body>
+    <script>
+      var activationCode = prompt("请输入激活码：");
+      if (activationCode !== "wwz-333409") {
+        alert("激活码错误，跳转到百度首页");
+        window.location.href = "http://www.baidu.com";
+      }
+    </script>
     <div class="topbar">
       <h1>WWZ-AI</h1>
     </div>
@@ -139,9 +146,8 @@
       <div class="lastbox">
         <div class="model-container">
           <select id="model-selector" onchange="changeModel()">
-            <option value="gpt-4-0125-preview">GPT-4-0125-Preview</option>
-            <option value="gpt-4-turbo-preview">GPT-4-Turbo-Preview</option>
-            <option value="gpt-4-128k">GPT-4-128K</option>
+            <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
+            <option value="stable-diffusion">stable-diffusion</option>
           </select>
         </div>
         <button onclick="sendMessage()">
@@ -161,7 +167,7 @@
       var conversation = [
         { role: "system", content: "You are a helpful assistant." },
       ];
-      var selectedModel = "gpt-4";
+      var selectedModel = "gpt-3.5-turbo";
       function sendMessage() {
         var userInput = document.getElementById("user-input").value;
         appendMessage("您", userInput);
@@ -177,7 +183,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer nk-2311676378 ",
+            Authorization: "Bearer sk-ygy7ST3wa1kELcQWin2jarekev9BhDebpWsElPlWh4eqXJfE ",
           },
           body: JSON.stringify({
             model: model,
@@ -188,7 +194,7 @@
           }),
         };
         fetch(
-          "https://chat.flssedu1.top/api/openai/v1/chat/completions",
+          "https://api.gptgod.online/v1/chat/completions",
           requestOptions
         )
           .then((response) => response.json())
@@ -220,14 +226,36 @@
 
     var index = 0;
     var typingInterval = setInterval(function () {
-        typingSpan.innerHTML += text[index];
-        index++;
-        if (index === text.length) {
-            clearInterval(typingInterval);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+      typingSpan.innerHTML += text[index];
+      index++;
+      if (index === text.length) {
+        clearInterval(typingInterval);
+        checkForImageURL(typingSpan.innerHTML); // 在打字完成后检查图像 URL
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
     }, 50); // 根据需要调整间隔
-}
+  }
+
+  function checkForImageURL(text) {
+    var urlRegex = /(https?:\/\/[^\s]+)/;
+    var match = text.match(urlRegex);
+
+    if (match) {
+      var imageUrl = match[0];
+      displayImage(imageUrl);
+    }
+  }
+
+  function displayImage(imageUrl) {
+    var chatBox = document.getElementById("chat-box");
+    var imageDiv = document.createElement("div");
+    imageDiv.className = "image";
+    var img = document.createElement("img");
+    img.src = imageUrl;
+    imageDiv.appendChild(img);
+    chatBox.appendChild(imageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
       function appendMessage(sender, message) {
         var chatBox = document.getElementById("chat-box");
         var messageDiv = document.createElement("div");
