@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,29 +12,32 @@
         box-sizing: border-box;
       }
       body {
-        font-family: Arial, sans-serif;
-        background-color: #f5f5f5;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #121212;
+        color: #fff;
       }
       .topbar {
         width: 100%;
         min-width: 600px;
         height: 60px;
-        background-color: #d02090; /* 紫罗兰红 */
-        color: white;
+        background: linear-gradient(90deg, #00bfff, #00ff00);
+        color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 24px;
       }
       .chatbox {
-        width: 100%; /* 与屏幕一样宽 */
+        width: 100%;
         height: 360px;
         margin: 20px auto;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 0 5px 1px #4682b4; /* 灰蓝色 */
+        background-color: #222;
+        border-radius: 15px;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        overflow: hidden;
       }
       .chat {
-        width: 100%; /* 与屏幕一样宽 */
+        width: 100%;
         height: 300px;
         padding: 20px;
         overflow: auto;
@@ -41,72 +45,106 @@
       hr {
         height: 1px;
         border: none;
-        background-color: #00ced1; /* 天青蓝 */
+        background: linear-gradient(90deg, #00ced1, #4682b4);
       }
       .chatbox button {
         width: 40px;
         height: 40px;
         position: relative;
         margin: 9px 9px 9px calc(100% - 49px);
-        background-color: #9370db; /* 薰衣草紫 */
+        background: linear-gradient(90deg, #9932cc, #9370db);
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: 50%;
         cursor: pointer;
+        transition: background 0.3s ease;
       }
       button svg {
         margin: 10px;
       }
+      .button:hover {
+        background: linear-gradient(90deg, #9370db, #9932cc);
+      }
       .input-container {
-        width: 100%; /* 与屏幕一样宽 */
-        height: 160px;
+        width: 100%;
         margin: 20px auto;
-        border-radius: 10px;
-        background-color: #fff;
-        box-shadow: 0 0 5px 1px #87ceeb; /* 天蓝色 */
+        border-radius: 15px;
+        background: linear-gradient(90deg, #87ceeb, #00bfff);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column; 
+      }
+      .input-container label {
+        padding: 10px;
+        font-weight: bold;
       }
       .input-container textarea {
-        width: 100%;
+        width: calc(100% - 40px);
         height: 100px;
-        border-radius: 10px;
+        border-radius: 15px;
         padding: 20px;
         font-weight: 800;
         outline: none;
         border: none;
         resize: none;
+        background-color: #222;
+        color: #fff;
+        margin-bottom: 10px; 
       }
       .lastbox {
         width: 100%;
         height: 56px;
         display: flex;
+        align-items: center;
       }
       .model-container {
         position: relative;
-        margin: auto auto auto 9px;
+        margin: auto 9px auto auto;
+        overflow: hidden;
+      }
+      .model-selector {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        font-size: 16px;
+        font-weight: bold;
+        color: #fff;
+        opacity: 0;
+        transform: scale(0);
+        transition: opacity 0.5s ease, transform 0.5s ease;
       }
       select {
         width: 200px;
         height: 40px;
         padding: 0 10px;
-        border-radius: 10px;
-        border: 1px solid #006400; /* 深绿色 */
+        border-radius: 15px;
+        border: 1px solid #006400;
         outline: none;
         font-size: 14px;
-      }
-      select option {
-        padding: 8px;
-        line-height: 1.5;
+        background-color: #1a1a1a;
+        color: #fff;
+        appearance: none;
+        cursor: pointer;
       }
       .input-container button {
         width: 40px;
         height: 40px;
         position: relative;
         margin: auto 9px auto auto;
-        background-color: #87ceeb; /* 天蓝色 */
+        background: linear-gradient(90deg, #87ceeb, #00bfff);
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: 50%;
         cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      .button:hover {
+        background: linear-gradient(90deg, #00bfff, #87ceeb);
       }
     </style>
   </head>
@@ -167,7 +205,7 @@
       var conversation = [
         { role: "system", content: "You are a helpful assistant." },
       ];
-      var selectedModel = "gpt-3.5-turbo";
+      var selectedModel = "gpt-3.5-turbo-16k";
       function sendMessage() {
         var userInput = document.getElementById("user-input").value;
         appendMessage("您", userInput);
@@ -183,7 +221,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer sk-ygy7ST3wa1kELcQWin2jarekev9BhDebpWsElPlWh4eqXJfE ",
+            Authorization: "Bearer sk-KOJsBiYICHs4bTkKOEKbNIaoRXPmQx9qOayoSoHICKI7ZZnD",
           },
           body: JSON.stringify({
             model: model,
