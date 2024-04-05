@@ -1,110 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数学论文发布 - 探索未知的边界</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #121212; 
-            font-family: 'Arial', sans-serif;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            padding: 20px;
-        }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: #fff;
-            opacity: 0;
-            transform: translateY(-20px);
-            animation: fadeInUp 1.5s ease forwards;
-        }
-        p {
-            font-size: 1.2em;
-            width: 80%;
-            margin-bottom: 30px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 1.5s ease forwards;
-            animation-delay: 0.5s;
-        }
-        .button {
-            background-image: linear-gradient(to right, #4CAF50 0%, #45a049 100%);
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 1.5em;
-            border-radius: 5px;
-            margin: 4px 2px;
-            cursor: pointer;
-            opacity: 0;
-            transform: scale(0.9);
-            animation: fadeInUp 1.5s ease forwards;
-            animation-delay: 1s;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .button::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: linear-gradient(to right, #4CAF50 0%, #45a049 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 5px;
-        }
-        .button:hover::after {
-            opacity: 1;
-        }
-        .button:hover {
-            background-color: transparent;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.4) inset;
-            transform: scale(1.05);
-        }
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Upload</title>
 </head>
 <body>
-    <div class="container">
-        <h1>突破数学边界的创新论文</h1>
-        <p>
-            本论文由吴旺泽独立研究编写，论文中各项数据均使用计算机进行2000次数据检验，误差范围（小数点后10位的精度）均为0！本论文通过先进的数学模型和算法，打开了理解复杂系统的新视角。我们诚邀您阅读并体验这场数学革命，探索数学的奥秘！
-        </p>
-        <a href="https://pan.baidu.com/s/1Wq2jK6_zzig7K_XFq7gZhQ?pwd=8c37&#34;  target="_blank" class="button">阅读论文</a>
-    </div>
-    <script>
-        // JavaScript for the fade-in effect
-        window.onload = function() {
-            var elements = document.querySelectorAll('.container *');
-            for (var i = 0; i < elements.length; i++) {
-                elements[i].style.animation = 'fadeInUp 1.5s ease forwards';
-            }
-        };
-    </script>
+
+<h2>图片上传</h2>
+<form id="uploadForm" enctype="multipart/form-data">
+  <input type="file" id="fileInput" name="image" accept="image/*">
+  <button type="submit" onclick="uploadImage()">上传</button>
+</form>
+
+<script>
+function uploadImage() {
+  var form = document.getElementById('uploadForm');
+  var fileInput = document.getElementById('fileInput');
+  
+  var formData = new FormData();
+  formData.append('image', fileInput.files[0]);
+  formData.append('key', 'YOUR_API_KEY_HERE'); // Replace with your API key
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.imgbb.com/1/upload', true);
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+      var response = JSON.parse(xhr.responseText);
+      console.log('Upload successful. Image URL:', response.data.url);
+      alert('图片上传成功！');
+    } else {
+      console.error('Error:', xhr.statusText);
+      alert('上传失败，请重试！');
+    }
+  };
+  
+  xhr.onerror = function () {
+    console.error('Error:', xhr.statusText);
+    alert('上传失败，请重试！');
+  };
+  
+  xhr.send(formData);
+}
+</script>
+
 </body>
 </html>
