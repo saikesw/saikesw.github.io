@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17201f">
+  <meta name="description" content="场域 FIELDLAB：高中物理静电场可视化实验与概念练习。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%2317201f'/%3E%3Ccircle cx='20' cy='32' r='9' fill='%23e65d45'/%3E%3Ccircle cx='44' cy='32' r='9' fill='%23138f7a'/%3E%3Cpath d='M18 32h4M20 30v4M41 32h6' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>场域 FIELDLAB · 静电场实验室</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-app="physics-lab" data-default-preset="single-positive" data-default-view="field-lines">
+  <a class="skip-link" href="#experiment">跳到实验台</a>
+
+  <div class="site-shell" id="fieldlab-app">
+    <header class="topbar" id="site-header" aria-label="网站页眉">
+      <div class="brand-lockup">
+        <a class="brand" href="#top" aria-label="场域 FIELDLAB 首页">
+          <span class="brand-mark" aria-hidden="true">∿</span>
+          <span class="brand-name">场域</span>
+          <span class="brand-code">FIELDLAB</span>
+        </a>
+        <span class="brand-rule" aria-hidden="true"></span>
+        <div class="chapter-meta">
+          <span class="eyebrow">高中物理 · 静电场</span>
+          <strong id="chapter-title">电场线与等势面</strong>
+        </div>
+      </div>
+
+      <div class="chapter-progress-wrap">
+        <div class="progress-copy">
+          <span id="progress-label">章节进度</span>
+          <strong id="chapter-progress-text">02 <span aria-hidden="true">/</span> 06</strong>
+        </div>
+        <progress class="progress-meter" id="chapter-progress" aria-labelledby="progress-label chapter-progress-text" max="6" value="2">2 / 6</progress>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="intro-strip" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="section-kicker"><span class="kicker-index">02</span> FIELD STUDY / 现场探究</p>
+          <h1 id="page-title">电场的空间图景</h1>
+          <p class="intro-lede">把看不见的电场，变成可以观察、测量和质疑的空间关系。</p>
+        </div>
+        <div class="intro-note">
+          <span class="note-symbol" aria-hidden="true">⌁</span>
+          <p><strong>本节任务</strong><br>比较电荷分布如何改变场线、等势面与试探电荷的受力。</p>
+        </div>
+      </section>
+
+      <section class="lab-section" id="experiment" aria-labelledby="experiment-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker"><span class="kicker-index">LAB</span> INTERACTIVE MODEL</p>
+            <h2 id="experiment-title">静电场实验台</h2>
+          </div>
+          <p class="section-description">先选一个电荷构型，再拖动试探电荷寻找规律。</p>
+        </div>
+
+        <div class="experiment-toolbar" id="experiment-toolbar">
+          <div class="toolbar-group preset-group" id="preset-controls" role="group" aria-labelledby="preset-label">
+            <span class="toolbar-label" id="preset-label">快速构型</span>
+            <button class="preset-button is-active" id="preset-single-positive" type="button" data-preset="single-positive" data-preset-id="single-positive" aria-pressed="true">
+              <span class="charge-glyph charge-glyph-positive" aria-hidden="true">＋</span>单正电荷
+            </button>
+            <button class="preset-button" id="preset-equal-opposite" type="button" data-preset="equal-opposite" data-preset-id="equal-opposite" aria-pressed="false">
+              <span class="charge-glyph charge-glyph-negative" aria-hidden="true">−</span><span class="charge-glyph charge-glyph-positive" aria-hidden="true">＋</span>等量异号
+            </button>
+            <button class="preset-button" id="preset-equal-same" type="button" data-preset="equal-same" data-preset-id="equal-same" aria-pressed="false">
+              <span class="charge-glyph charge-glyph-positive" aria-hidden="true">＋</span><span class="charge-glyph charge-glyph-positive" aria-hidden="true">＋</span>等量同号
+            </button>
+            <button class="preset-button" id="preset-custom" type="button" data-preset="custom" data-preset-id="custom" aria-pressed="false">
+              <span class="charge-glyph charge-glyph-neutral" aria-hidden="true">◇</span>自定义双电荷
+            </button>
+          </div>
+
+          <div class="toolbar-group view-group" id="dimension-switcher" role="group" aria-labelledby="view-label">
+            <span class="toolbar-label" id="view-label">观察维度</span>
+            <div class="segmented-control" role="group" aria-label="选择可视化维度">
+              <button class="segment-button is-active" id="view-field-lines" type="button" data-view="field-lines" data-dimension="2d" data-renderer="field" aria-pressed="true">二维场线</button>
+              <button class="segment-button" id="view-potential-surface" type="button" data-view="potential-surface" data-dimension="3d" data-renderer="surface" aria-pressed="false">三维电势</button>
+            </div>
+          </div>
+
+          <div class="toolbar-actions" id="experiment-actions">
+            <button class="icon-button" id="reset-experiment" type="button" data-action="reset" title="恢复默认构型">
+              <span aria-hidden="true">↺</span><span>重置</span>
+            </button>
+            <button class="icon-button" id="help-button" type="button" data-action="help" title="查看操作提示">
+              <span aria-hidden="true">?</span><span>帮助</span>
+            </button>
+            <button class="icon-button icon-button-accent" id="export-data" type="button" data-action="export" title="导出当前测量数据">
+              <span aria-hidden="true">⇩</span><span>导出</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="experiment-grid">
+          <section class="visual-panel" id="visual-panel" aria-labelledby="visual-title">
+            <div class="visual-header">
+              <div>
+                <p class="panel-kicker">LIVE FIELD MAP / 实时场图</p>
+                <h3 id="visual-title">二维电场线</h3>
+              </div>
+              <div class="simulation-status" id="simulation-status" aria-live="polite">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="render-state">计算稳定</span>
+              </div>
+            </div>
+
+            <div class="canvas-stage" id="canvas-stage" data-render-target="field" data-coordinate-system="cartesian">
+              <canvas id="field-canvas" width="1200" height="720" aria-label="二维电场线与电势热图，可拖动电荷和试探电荷"></canvas>
+              <canvas id="surface-canvas" width="1200" height="720" aria-label="三维电势曲面，可旋转观察" hidden></canvas>
+              <div class="canvas-grid-label canvas-grid-label-x" aria-hidden="true">x / cm</div>
+              <div class="canvas-grid-label canvas-grid-label-y" aria-hidden="true">y / cm</div>
+              <div class="canvas-hint" id="canvas-hint" role="status">
+                <span class="hint-symbol" aria-hidden="true">⌖</span>
+                <span id="canvas-instruction">拖动电荷或试探电荷，观察场线如何响应</span>
+              </div>
+              <div class="canvas-badge" id="canvas-coordinate" aria-live="polite">探针位置&nbsp; <strong id="probe-position-value">( 0.0, 0.0 ) cm</strong></div>
+              <div class="canvas-empty-state" id="canvas-empty-state" hidden>
+                <span aria-hidden="true">□</span>
+                <strong>等待场图计算</strong>
+                <span>调整参数后，场线将在这里绘制。</span>
+              </div>
+            </div>
+
+            <div class="visual-footer">
+              <div class="legend" id="field-legend" aria-label="电场图例">
+                <span class="legend-label">图例</span>
+                <span class="legend-item" id="legend-positive" data-legend="positive"><i class="legend-swatch swatch-positive" aria-hidden="true"></i>正电荷 Q ＞ 0</span>
+                <span class="legend-item" id="legend-negative" data-legend="negative"><i class="legend-swatch swatch-negative" aria-hidden="true"></i>负电荷 Q ＜ 0</span>
+                <span class="legend-item" id="legend-field-line" data-legend="field-line"><i class="legend-line legend-line-field" aria-hidden="true"></i>电场线</span>
+                <span class="legend-item" id="legend-equipotential" data-legend="equipotential"><i class="legend-line legend-line-equipotential" aria-hidden="true"></i>等势线</span>
+              </div>
+              <div class="canvas-readout" id="canvas-readout" aria-live="polite">
+                <span class="readout-label">场强方向</span>
+                <strong id="field-direction-value">—</strong>
+              </div>
+            </div>
+            <p class="visual-caption" id="visual-caption">这是三维点电荷场在 z = 0 平面的截面；颜色与箭头长度采用压缩尺度，方向和实时读数由解析公式计算。</p>
+          </section>
+
+          <aside class="control-panel" id="control-panel" aria-label="实验控制面板">
+            <div class="panel-tabs" id="lab-tabs" role="tablist" aria-label="实验面板分类">
+              <button class="panel-tab is-active" id="parameters-tab" type="button" role="tab" aria-selected="true" aria-controls="parameters-panel" data-tab="parameters">参数</button>
+              <button class="panel-tab" id="measurement-tab" type="button" role="tab" aria-selected="false" aria-controls="measurement-panel" data-tab="measurement" tabindex="-1">测量</button>
+              <button class="panel-tab" id="principle-tab" type="button" role="tab" aria-selected="false" aria-controls="principle-panel" data-tab="principle" tabindex="-1">原理</button>
+            </div>
+
+            <div class="tab-panels">
+              <section class="tab-panel is-active" id="parameters-panel" role="tabpanel" aria-labelledby="parameters-tab" data-panel="parameters">
+                <div class="panel-section" id="charge-controls">
+                  <div class="panel-section-heading">
+                    <div>
+                      <p class="panel-kicker">SOURCE CHARGES / 场源</p>
+                      <h4>设置电荷</h4>
+                    </div>
+                    <span class="unit-note">单位：nC</span>
+                  </div>
+
+                  <div class="range-control" id="q1-control">
+                    <div class="range-heading">
+                      <label for="q1-slider"><span class="charge-indicator charge-indicator-positive" aria-hidden="true">＋</span>电荷 Q1</label>
+                      <output id="q1-value" for="q1-slider" data-value-for="q1-slider">+6.0 nC</output>
+                    </div>
+                    <input id="q1-slider" name="q1" type="range" min="-10" max="10" step="0.5" value="6" data-parameter="q1" data-charge-id="q1" aria-describedby="q1-scale">
+                    <div class="range-scale" id="q1-scale" aria-hidden="true"><span>−10</span><span>0</span><span>+10</span></div>
+                  </div>
+
+                  <div class="range-control" id="q2-control">
+                    <div class="range-heading">
+                      <label for="q2-slider"><span class="charge-indicator charge-indicator-negative" aria-hidden="true">−</span>电荷 Q2</label>
+                      <output id="q2-value" for="q2-slider" data-value-for="q2-slider">0.0 nC</output>
+                    </div>
+                    <input id="q2-slider" name="q2" type="range" min="-10" max="10" step="0.5" value="0" data-parameter="q2" data-charge-id="q2" aria-describedby="q2-scale">
+                    <div class="range-scale" id="q2-scale" aria-hidden="true"><span>−10</span><span>0</span><span>+10</span></div>
+                  </div>
+
+                  <div class="range-control probe-control" id="probe-charge-control">
+                    <div class="range-heading">
+                      <label for="test-charge-slider"><span class="probe-indicator" aria-hidden="true">·</span>试探电荷 q</label>
+                      <output id="test-charge-value" for="test-charge-slider" data-value-for="test-charge-slider">+1.0 nC</output>
+                    </div>
+                    <input id="test-charge-slider" name="test-charge" type="range" min="-3" max="3" step="0.1" value="1" data-parameter="test-charge" data-charge-id="probe" aria-describedby="test-charge-scale">
+                    <div class="range-scale" id="test-charge-scale" aria-hidden="true"><span>−3</span><span>0</span><span>+3</span></div>
+                  </div>
+                </div>
+
+                <div class="panel-section" id="layer-controls">
+                  <div class="panel-section-heading">
+                    <div>
+                      <p class="panel-kicker">LAYERS / 图层</p>
+                      <h4>叠加信息</h4>
+                    </div>
+                    <button class="text-button" id="layers-default" type="button" data-action="layers-default">恢复默认</button>
+                  </div>
+                  <div class="check-grid">
+                    <label class="check-row" for="heatmap-toggle"><input id="heatmap-toggle" type="checkbox" name="layer-heatmap" data-layer="heatmap" checked><span class="check-mark" aria-hidden="true"></span><span>电势热图</span></label>
+                    <label class="check-row" for="field-lines-toggle"><input id="field-lines-toggle" type="checkbox" name="layer-field-lines" data-layer="field-lines" checked><span class="check-mark" aria-hidden="true"></span><span>电场线</span></label>
+                    <label class="check-row" for="equipotential-toggle"><input id="equipotential-toggle" type="checkbox" name="layer-equipotential" data-layer="equipotential" checked><span class="check-mark" aria-hidden="true"></span><span>等势线</span></label>
+                    <label class="check-row" for="vectors-toggle"><input id="vectors-toggle" type="checkbox" name="layer-vectors" data-layer="vectors" checked><span class="check-mark" aria-hidden="true"></span><span>场强矢量</span></label>
+                    <label class="check-row" for="labels-toggle"><input id="labels-toggle" type="checkbox" name="layer-labels" data-layer="labels" checked><span class="check-mark" aria-hidden="true"></span><span>数值标签</span></label>
+                    <label class="check-row" for="animation-toggle"><input id="animation-toggle" type="checkbox" name="layer-animation" data-layer="animation" checked><span class="check-mark" aria-hidden="true"></span><span>粒子动画</span></label>
+                  </div>
+                </div>
+
+                <fieldset class="panel-section path-controls" id="path-controls">
+                  <legend class="panel-section-heading">
+                    <span><span class="panel-kicker">PROBE PATH / 试探路径</span><strong>测量路径</strong></span>
+                  </legend>
+                  <div class="radio-grid">
+                    <label class="radio-row" for="path-straight"><input id="path-straight" type="radio" name="probe-path" value="line" data-path="line" checked><span class="radio-mark" aria-hidden="true"></span><span>直线</span></label>
+                    <label class="radio-row" for="path-polyline"><input id="path-polyline" type="radio" name="probe-path" value="polyline" data-path="polyline"><span class="radio-mark" aria-hidden="true"></span><span>折线</span></label>
+                    <label class="radio-row" for="path-curve"><input id="path-curve" type="radio" name="probe-path" value="arc" data-path="arc"><span class="radio-mark" aria-hidden="true"></span><span>曲线</span></label>
+                  </div>
+                </fieldset>
+              </section>
+
+              <section class="tab-panel" id="measurement-panel" role="tabpanel" aria-labelledby="measurement-tab" data-panel="measurement" hidden>
+                <div class="panel-section measurement-overview">
+                  <div class="panel-section-heading">
+                    <div>
+                      <p class="panel-kicker">LIVE READINGS / 实时读数</p>
+                      <h4>试探电荷所在点</h4>
+                    </div>
+                    <span class="live-badge" id="measurement-status"><span class="status-dot" aria-hidden="true"></span>实时</span>
+                  </div>
+                  <div class="reading-list" id="realtime-readings">
+                    <div class="reading-row" id="field-strength-readout" data-reading="field-strength"><span>电场强度 E</span><output id="field-strength-value">— N/C</output></div>
+                    <div class="reading-row" id="potential-readout" data-reading="potential"><span>电势 φ</span><output id="potential-value">— V</output></div>
+                    <div class="reading-row" id="potential-energy-readout" data-reading="potential-energy"><span>电势能 E<sub>p</sub></span><output id="potential-energy-value">— μJ</output></div>
+                    <div class="reading-row" id="work-readout" data-reading="work"><span>电场力功 W</span><output id="work-value">— μJ</output></div>
+                    <div class="reading-row" id="distance-readout" data-reading="distance"><span>距 Q1 / Q2</span><output id="distance-value">— cm</output></div>
+                    <div class="reading-row" id="field-angle-readout" data-reading="field-angle"><span>方向角 θ</span><output id="field-angle-value">— °</output></div>
+                  </div>
+                  <p class="measurement-summary" id="measurement-summary">移动探针后，读数会随位置更新。</p>
+                </div>
+
+                <div class="panel-section" id="measurement-log-section">
+                  <div class="panel-section-heading"><h4>路径采样</h4><button class="text-button" id="clear-measurement" type="button" data-action="clear-measurement">清空</button></div>
+                  <div class="table-wrap">
+                    <table class="measurement-table" id="measurement-table">
+                      <caption class="sr-only">已采样点的电势和场强</caption>
+                      <thead><tr><th scope="col">点位</th><th scope="col">φ / V</th><th scope="col">E / N·C<sup>−1</sup></th></tr></thead>
+                      <tbody id="measurement-log"><tr class="empty-row" id="measurement-empty"><td colspan="3">尚未添加测量点</td></tr></tbody>
+                    </table>
+                  </div>
+                  <button class="outline-button full-width" id="add-measurement-point" type="button" data-action="add-measurement">＋ 添加当前点</button>
+                </div>
+              </section>
+
+              <section class="tab-panel" id="principle-panel" role="tabpanel" aria-labelledby="principle-tab" data-panel="principle" hidden>
+                <div class="panel-section principle-lead">
+                  <p class="panel-kicker">CORE MODEL / 核心模型</p>
+                  <h4>从库仑定律到电场</h4>
+                  <p>电场强度定义为单位正电荷在该点受到的电场力，方向与正试探电荷受力方向一致。</p>
+                  <div class="formula-block" id="principle-formula" aria-label="点电荷电场强度公式"><span>E</span><b>=</b><span class="formula-fraction"><i>k |Q|</i><em>r²</em></span></div>
+                  <p class="formula-note">k = 9.0 × 10<sup>9</sup> N·m²/C²；叠加多个场源时，电场强度按矢量相加。</p>
+                </div>
+                <div class="panel-section principle-checks" id="principle-checks">
+                  <div class="principle-line"><span class="principle-symbol" aria-hidden="true">01</span><p><strong>方向</strong>：正电荷场线向外，负电荷场线向内。</p></div>
+                  <div class="principle-line"><span class="principle-symbol" aria-hidden="true">02</span><p><strong>疏密</strong>：同一图中，场线越密处通常表示场强越大。</p></div>
+                  <div class="principle-line"><span class="principle-symbol" aria-hidden="true">03</span><p><strong>功与势</strong>：沿等势线移动电荷，电场力不做功。</p></div>
+                </div>
+                <button class="outline-button full-width" id="principle-more" type="button" data-action="open-principle">查看推导提示 <span aria-hidden="true">→</span></button>
+              </section>
+            </div>
+            <p class="panel-footnote" id="control-footnote"><span aria-hidden="true">i</span> 读数为理想模型结果，适用于概念比较，不替代实验室测量。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="guided-section content-section" id="guided-experiments" aria-labelledby="guided-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="section-kicker"><span class="kicker-index">TRY</span> GUIDED INQUIRY</p>
+            <h2 id="guided-title">四个引导实验</h2>
+          </div>
+          <p class="section-description">每次只改变一个变量，把观察写成可检验的判断。</p>
+        </div>
+        <div class="guided-grid" id="guided-experiment-list">
+          <article class="guided-item" id="guided-single-charge" data-experiment-id="single-charge" data-load-preset="single-positive">
+            <div class="item-index" aria-hidden="true">01</div>
+            <div class="guided-content"><p class="item-label">基准场</p><h3>一颗电荷的辐射</h3><p>固定 Q1，沿不同方向移动试探电荷，比较相同距离处的场强。</p><button class="link-button" type="button" data-action="start-experiment" data-experiment="single-charge">开始观察 <span aria-hidden="true">→</span></button></div>
+            <span class="item-symbol symbol-positive" aria-hidden="true">＋</span>
+          </article>
+          <article class="guided-item" id="guided-dipole" data-experiment-id="dipole" data-load-preset="equal-opposite">
+            <div class="item-index" aria-hidden="true">02</div>
+            <div class="guided-content"><p class="item-label">矢量叠加</p><h3>异号电荷之间</h3><p>观察中垂线与连线上的场线，找出场强方向改变的位置。</p><button class="link-button" type="button" data-action="start-experiment" data-experiment="dipole">开始观察 <span aria-hidden="true">→</span></button></div>
+            <span class="item-symbol symbol-dipole" aria-hidden="true">＋ −</span>
+          </article>
+          <article class="guided-item" id="guided-same-sign" data-experiment-id="same-sign" data-load-preset="equal-same">
+            <div class="item-index" aria-hidden="true">03</div>
+            <div class="guided-content"><p class="item-label">对称性</p><h3>同号电荷的空场点</h3><p>在两电荷中点放置探针，验证电场强度是否为零及其原因。</p><button class="link-button" type="button" data-action="start-experiment" data-experiment="same-sign">开始观察 <span aria-hidden="true">→</span></button></div>
+            <span class="item-symbol symbol-same" aria-hidden="true">＋ ＋</span>
+          </article>
+          <article class="guided-item" id="guided-equipotential" data-experiment-id="equipotential" data-load-preset="custom">
+            <div class="item-index" aria-hidden="true">04</div>
+            <div class="guided-content"><p class="item-label">能量视角</p><h3>沿等势线搬运</h3><p>选取一条等势线，比较路径长度与电场力功之间的关系。</p><button class="link-button" type="button" data-action="start-experiment" data-experiment="equipotential">开始观察 <span aria-hidden="true">→</span></button></div>
+            <span class="item-symbol symbol-equipotential" aria-hidden="true">∥</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="knowledge-section content-section" id="knowledge-system" aria-labelledby="knowledge-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="section-kicker"><span class="kicker-index">MAP</span> CONCEPT SYSTEM</p>
+            <h2 id="knowledge-title">知识体系</h2>
+          </div>
+          <p class="section-description">从定义出发，沿着“场—势—能量—导体”建立一张可回看的网。</p>
+        </div>
+        <div class="knowledge-grid">
+          <article class="knowledge-item knowledge-item-featured" id="knowledge-definition" data-topic="definition-formula">
+            <span class="knowledge-number">01</span><p class="item-label">基本量</p><h3>定义与公式</h3><p>电场强度 <code>E = F/q₀</code>，点电荷场强大小 <code>E = k|Q|/r²</code>。</p><a href="#principle-panel" class="knowledge-link">回到原理 <span aria-hidden="true">↗</span></a>
+          </article>
+          <article class="knowledge-item" id="knowledge-field-lines" data-topic="field-lines">
+            <span class="knowledge-number">02</span><p class="item-label">空间表达</p><h3>场线</h3><p>切线方向表示场强方向，线的疏密定性表示场强大小；在场强非零处，场线不能相交。</p><a href="#experiment" class="knowledge-link">在场图中验证 <span aria-hidden="true">↗</span></a>
+          </article>
+          <article class="knowledge-item" id="knowledge-equipotential" data-topic="equipotential-surfaces">
+            <span class="knowledge-number">03</span><p class="item-label">几何表达</p><h3>等势面</h3><p>同一等势面电势相等；在场强非零处，电场线与等势面正交。</p><a href="#view-potential-surface" class="knowledge-link">切换电势视图 <span aria-hidden="true">↗</span></a>
+          </article>
+          <article class="knowledge-item" id="knowledge-energy-work" data-topic="potential-energy-work">
+            <span class="knowledge-number">04</span><p class="item-label">能量关系</p><h3>电势能与功</h3><p><code>W<sub>AB</sub> = q(φ<sub>A</sub> − φ<sub>B</sub>)</code>，电场力做功只与初末位置有关。</p><a href="#measurement-panel" class="knowledge-link">查看实时读数 <span aria-hidden="true">↗</span></a>
+          </article>
+          <article class="knowledge-item" id="knowledge-conductor" data-topic="conductor-equilibrium">
+            <span class="knowledge-number">05</span><p class="item-label">边界条件</p><h3>导体静电平衡</h3><p>导体内部合场强为零、导体为等势体；体内净电荷密度为零，净电荷位于表面。</p><a href="#misconceptions" class="knowledge-link">辨析易错点 <span aria-hidden="true">↗</span></a>
+          </article>
+        </div>
+      </section>
+
+      <section class="derivation-section content-section" id="derivation-system" aria-labelledby="derivation-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="section-kicker"><span class="kicker-index">WHY</span> MODEL &amp; DERIVATION</p>
+            <h2 id="derivation-title">模型、公式与推导</h2>
+          </div>
+          <p class="section-description">先约定对象、单位与符号，再解释图像；所有实时读数均由同一组解析公式计算。</p>
+        </div>
+
+        <div class="model-scope" aria-label="模型适用范围">
+          <strong>模型范围</strong>
+          <p>真空中（空气可近似为真空）有限个静止的三维理想点电荷。画布显示其 <code>z = 0</code> 平面截面，仍使用三维点电荷的 <code>1/r²</code> 场强和 <code>1/r</code> 电势规律，不是二维静电学。</p>
+        </div>
+
+        <div class="derivation-grid">
+          <article class="derivation-item">
+            <span class="derivation-index">01 / VECTOR</span>
+            <h3>电场强度：矢量叠加</h3>
+            <div class="equation" aria-label="电场强度矢量叠加公式">E(r) = k Σ Qᵢ Rᵢ / rᵢ³</div>
+            <p>其中 <code>Rᵢ = r − aᵢ</code>，<code>rᵢ = |Rᵢ|</code>。每个分量都带方向，先分别求 <code>Eₓ</code>、<code>Eᵧ</code>，再作矢量和。电场方向定义为正试探电荷的受力方向。</p>
+            <p class="formula-detail"><code>k = 8.987 551 792 3 × 10⁹ N·m²/C²</code>；高中计算通常取 <code>9.0 × 10⁹</code>。</p>
+          </article>
+
+          <article class="derivation-item">
+            <span class="derivation-index">02 / SCALAR</span>
+            <h3>电势：带符号的标量叠加</h3>
+            <div class="equation" aria-label="点电荷系电势公式">φ(r) = k Σ Qᵢ / rᵢ</div>
+            <p>有限点电荷系统取 <code>φ(∞) = 0</code>。正、负源电荷的贡献直接代数相加，因此“电势为零”不等于“场强为零”。二者满足 <code>E = −∇φ</code>，沿电场方向电势降低。</p>
+            <p class="formula-detail">电势是场的属性；改变试探电荷 <code>q₀</code> 不会改变原电场与电势。</p>
+          </article>
+
+          <article class="derivation-item">
+            <span class="derivation-index">03 / FORCE &amp; ENERGY</span>
+            <h3>力与电势能：试探电荷决定正负</h3>
+            <div class="equation" aria-label="电场力和电势能公式">F = q₀E　　Eₚ = q₀φ</div>
+            <p><code>q₀ &gt; 0</code> 时受力与电场同向，<code>q₀ &lt; 0</code> 时反向。电势能属于“电荷—电场系统”；同一点的电势不变，但试探电荷变号时电势能随之变号。</p>
+            <p class="formula-detail">源电荷系统自身的相互作用能为 <code>𝒰 = kΣᵢ&lt;ⱼ QᵢQⱼ/rᵢⱼ</code>，只计不同电荷对，不包含点电荷自能。</p>
+          </article>
+
+          <article class="derivation-item derivation-item-accent">
+            <span class="derivation-index">04 / SIGN CONVENTION</span>
+            <h3>电势差、变化量与电场力功</h3>
+            <div class="equation equation-stack" aria-label="电势差和电场力做功公式">
+              <span>U<sub>AB</sub> ≡ φ<sub>A</sub> − φ<sub>B</sub> = ∫<sub>A</sub><sup>B</sup> E·dl</span>
+              <span>Δφ<sub>A→B</sub> ≡ φ<sub>B</sub> − φ<sub>A</sub> = −U<sub>AB</sub></span>
+              <span>W<sup>e</sup><sub>A→B</sub> = q₀U<sub>AB</sub> = −ΔE<sub>p</sub></span>
+            </div>
+            <p>本网站固定采用中国高中教材常用的 <code>UAB = φA − φB</code>。注意它与“末减初”的电势变化量 <code>Δφ</code> 符号相反。静电场是保守场，只要路径不穿过点电荷奇点，任意 A→B 路径积分应给出同一结果。</p>
+          </article>
+        </div>
+
+        <div class="principle-table-wrap">
+          <table class="principle-table">
+            <caption>四类典型构型的可检验结论</caption>
+            <thead><tr><th scope="col">构型</th><th scope="col">场强结论</th><th scope="col">电势结论</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">单点电荷</th><td>距离加倍，<code>E → E/4</code>；正电荷向外、负电荷向内。</td><td>距离加倍，<code>φ → φ/2</code>；截面等势线为同心圆，实际等势面为球面。</td></tr>
+              <tr><th scope="row">等量异号</th><td>中点场强由正指向负，且不存在有限零场点。</td><td>中垂线 <code>φ = 0</code>，但其上通常 <code>E ≠ 0</code>。</td></tr>
+              <tr><th scope="row">等量同号</th><td>中点 <code>E = 0</code>，方向未定义；场线不连接两个同号电荷。</td><td>中点电势不为零，并且是电势的鞍点。</td></tr>
+              <tr><th scope="row">不等量异号</th><td>有限零场点位于较小电荷外侧。</td><td>零电势轨迹满足 <code>r₁/r₂ = |Q₁|/|Q₂|</code>，一般为阿波罗尼斯圆。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="visual-integrity">
+          <div><strong>奇点</strong><p>理想点电荷中心处 <code>E</code> 与 <code>φ</code> 发散。探针进入屏蔽半径时显示“未定义”，计算核心不会用软化公式伪造有限值。</p></div>
+          <div><strong>场线</strong><p>场线是处处与 <code>E</code> 相切的积分曲线，不是粒子轨迹；其数量与屏幕疏密只能作定性比较。</p></div>
+          <div><strong>等势线</strong><p>不同电势等级的等势线不相交，并在非零场处与场线正交；临界鞍点需要单独辨认。</p></div>
+          <div><strong>显示压缩</strong><p>热图颜色、矢量长度和三维高度使用压缩与裁剪以容纳巨大动态范围，实时数字始终来自未软化的解析模型。</p></div>
+        </div>
+      </section>
+
+      <section class="misconception-section content-section" id="misconceptions" aria-labelledby="misconception-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="section-kicker"><span class="kicker-index">CHECK</span> COMMON TRAPS</p>
+            <h2 id="misconception-title">常见误区</h2>
+          </div>
+          <p class="section-description">先判断，再展开答案；把“看起来像”与“物理上成立”分开。</p>
+        </div>
+        <div class="misconception-list">
+          <details class="misconception-item" id="misconception-lines">
+            <summary><span class="summary-number">A</span><span>场线是电荷真实运动的轨迹吗？</span><span class="summary-toggle" aria-hidden="true">＋</span></summary>
+            <p>不是。场线是人为画出的几何曲线，用于描述场的方向和相对强弱；只有在特定初始条件下，带电粒子的运动轨迹才可能与场线重合。</p>
+          </details>
+          <details class="misconception-item" id="misconception-zero-field">
+            <summary><span class="summary-number">B</span><span>某点电势为零，就说明该点场强也为零吗？</span><span class="summary-toggle" aria-hidden="true">＋</span></summary>
+            <p>不一定。电势是标量叠加，场强是矢量叠加；电势为零的点仍可能存在非零场强。</p>
+          </details>
+          <details class="misconception-item" id="misconception-density">
+            <summary><span class="summary-number">C</span><span>场线越密，电荷受到的力一定越大吗？</span><span class="summary-toggle" aria-hidden="true">＋</span></summary>
+            <p>场线疏密只能在同一幅图、同一绘制规则下定性比较场强。实际受力还与试探电荷的电荷量有关，<code>F = qE</code>。</p>
+          </details>
+          <details class="misconception-item" id="misconception-equipotential">
+            <summary><span class="summary-number">D</span><span>沿等势线移动，路程越长做功越多吗？</span><span class="summary-toggle" aria-hidden="true">＋</span></summary>
+            <p>不会。理想静电场是保守场，等势线上任意两点电势差为零，因此电场力功为零，与路径长度无关。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="quiz-section content-section" id="instant-quiz" aria-labelledby="quiz-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="section-kicker"><span class="kicker-index">QUIZ</span> QUICK CHECK</p>
+            <h2 id="quiz-title">即时测验</h2>
+          </div>
+          <div class="quiz-score" aria-live="polite"><span>得分</span><strong id="quiz-score">— / 4</strong></div>
+        </div>
+        <form class="quiz-form" id="quiz-form" data-quiz="electrostatic-field" novalidate>
+          <fieldset class="quiz-item" id="quiz-question-1" data-question="1" data-answer="B" data-quiz-answer="B">
+            <legend><span class="question-number">01</span>电场线在某点的切线方向，表示什么？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="quiz-q1" value="A"><span class="option-letter">A</span><span>负试探电荷的运动方向</span></label>
+              <label><input type="radio" name="quiz-q1" value="B"><span class="option-letter">B</span><span>正试探电荷的受力方向</span></label>
+              <label><input type="radio" name="quiz-q1" value="C"><span class="option-letter">C</span><span>等势线的切线方向</span></label>
+            </div>
+            <p class="quiz-feedback" id="quiz-feedback-1" data-feedback-for="quiz-question-1" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="quiz-item" id="quiz-question-2" data-question="2" data-answer="C" data-quiz-answer="C">
+            <legend><span class="question-number">02</span>等势面上任意两点之间，电场力做功为多少？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="quiz-q2" value="A"><span class="option-letter">A</span><span>与路径长度成正比</span></label>
+              <label><input type="radio" name="quiz-q2" value="B"><span class="option-letter">B</span><span>与试探电荷正负有关但不为零</span></label>
+              <label><input type="radio" name="quiz-q2" value="C"><span class="option-letter">C</span><span>零</span></label>
+            </div>
+            <p class="quiz-feedback" id="quiz-feedback-2" data-feedback-for="quiz-question-2" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="quiz-item" id="quiz-question-3" data-question="3" data-answer="A" data-quiz-answer="A">
+            <legend><span class="question-number">03</span>点电荷电场强度的大小与距离 r 的关系是？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="quiz-q3" value="A"><span class="option-letter">A</span><span>与 r² 成反比</span></label>
+              <label><input type="radio" name="quiz-q3" value="B"><span class="option-letter">B</span><span>与 r 成反比</span></label>
+              <label><input type="radio" name="quiz-q3" value="C"><span class="option-letter">C</span><span>与 r² 成正比</span></label>
+            </div>
+            <p class="quiz-feedback" id="quiz-feedback-3" data-feedback-for="quiz-question-3" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="quiz-item" id="quiz-question-4" data-question="4" data-answer="B" data-quiz-answer="B">
+            <legend><span class="question-number">04</span>静电平衡的导体内部，电场强度应为？</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="quiz-q4" value="A"><span class="option-letter">A</span>最大</label>
+              <label><input type="radio" name="quiz-q4" value="B"><span class="option-letter">B</span>零</label>
+              <label><input type="radio" name="quiz-q4" value="C"><span class="option-letter">C</span>只与导体形状有关</label>
+            </div>
+            <p class="quiz-feedback" id="quiz-feedback-4" data-feedback-for="quiz-question-4" aria-live="polite"></p>
+          </fieldset>
+          <div class="quiz-actions">
+            <button class="primary-button" id="quiz-submit" type="submit" data-action="submit-quiz">提交答案 <span aria-hidden="true">→</span></button>
+            <button class="text-button" id="quiz-reset" type="reset" data-action="reset-quiz">重新作答</button>
+            <p class="quiz-result" id="quiz-result" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <aside class="rigor-note" id="rigor-note" aria-labelledby="rigor-title">
+        <div class="rigor-symbol" aria-hidden="true">∎</div>
+        <div>
+          <p class="section-kicker">MODEL NOTES / 模型边界</p>
+          <h2 id="rigor-title">严谨性说明</h2>
+          <p>本实验将场源视为真空中静止的三维理想点电荷，画布显示其 z = 0 平面截面。场线数量、颜色梯度和箭头长度是可视化约定，不代表可数的物理实体；点电荷中心是数学奇点，场强与电势在该点未定义。</p>
+          <ul class="rigor-list">
+            <li><span aria-hidden="true">01</span> 电场强度按矢量叠加，电势按带符号的标量叠加；试探电荷不参与源场计算。</li>
+            <li><span aria-hidden="true">02</span> 坐标、电荷与实时读数按 SI 公式换算；颜色、高度和箭头长度的压缩只影响显示。</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="site-footer" id="site-footer">
+      <span>场域 FIELDLAB / 电磁学基础</span>
+      <span>静电场 · 第 02 章</span>
+      <span id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></span>
+    </footer>
+  </div>
+
+  <dialog class="lab-dialog" id="help-dialog" aria-labelledby="help-dialog-title">
+    <div class="dialog-shell">
+      <header class="dialog-header">
+        <div><p class="panel-kicker">OPERATING GUIDE / 操作说明</p><h2 id="help-dialog-title">如何使用实验台</h2></div>
+        <button class="dialog-close" type="button" data-dialog-close aria-label="关闭帮助">×</button>
+      </header>
+      <div class="dialog-body">
+        <ol class="help-steps">
+          <li><span>01</span><div><strong>选择构型</strong><p>先加载单电荷、等量异号、等量同号或自定义双电荷。拖动源电荷会自动进入自定义模式。</p></div></li>
+          <li><span>02</span><div><strong>拖动与测量</strong><p>画布中的圆形为源电荷，黄色菱形为试探电荷，A/B 是路径端点，小方块是路径控制点。键盘聚焦画布后可用方向键移动探针，按住 Shift 每次移动 5 cm。</p></div></li>
+          <li><span>03</span><div><strong>比较路径</strong><p>切换直线、折线和曲线，观察 <code>∫E·dl</code> 是否始终等于 <code>φA − φB</code>。路径穿过点电荷奇点时会明确标为无效。</p></div></li>
+          <li><span>04</span><div><strong>切换视图</strong><p>二维视图用于观察场线、等势线与矢量；三维电势可拖动旋转、滚轮缩放、双击恢复视角。三维高度只作压缩显示。</p></div></li>
+        </ol>
+        <div class="dialog-note"><strong>方向粒子不是运动轨迹</strong><p>沿场线移动的亮点只标示电场线方向；真实带电粒子的轨迹还取决于电荷正负、质量与初速度。</p></div>
+      </div>
+      <footer class="dialog-actions"><button class="primary-button" type="button" data-dialog-close>开始实验</button></footer>
+    </div>
+  </dialog>
+
+  <dialog class="lab-dialog export-dialog" id="export-dialog" aria-labelledby="export-dialog-title">
+    <div class="dialog-shell">
+      <header class="dialog-header">
+        <div><p class="panel-kicker">EXPORT / 导出实验</p><h2 id="export-dialog-title">保留当前结果</h2></div>
+        <button class="dialog-close" type="button" data-dialog-close aria-label="关闭导出窗口">×</button>
+      </header>
+      <div class="dialog-body">
+        <div class="export-options">
+          <button type="button" data-export-format="png"><span class="export-icon" aria-hidden="true">▧</span><strong>导出场图 PNG</strong><small>保存当前二维场图或三维电势画面</small></button>
+          <button type="button" data-export-format="json"><span class="export-icon" aria-hidden="true">{ }</span><strong>导出实验 JSON</strong><small>包含构型、单位约定、实时读数与采样记录</small></button>
+        </div>
+        <p class="export-footnote">JSON 中明确记录 <code>UAB = φA − φB</code> 的符号约定，便于复核与二次分析。</p>
+      </div>
+      <footer class="dialog-actions"><button class="outline-button" type="button" data-dialog-close>取消</button></footer>
+    </div>
+  </dialog>
+
+  <noscript>
+    <div class="noscript-message">本实验台需要启用 JavaScript 才能计算场图；下方知识卡片与测验仍可阅读。</div>
+  </noscript>
+  <script defer src="js/physics.js"></script>
+  <script defer src="js/field-renderer.js"></script>
+  <script defer src="js/surface-renderer.js"></script>
+  <script defer src="js/app.js"></script>
+</body>
+</html>
