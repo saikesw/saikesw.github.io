@@ -1,1788 +1,974 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>宇宙宙长-三角洲特别联合行动</title>
-  <style>
-    :root{
-      --blue:#4aa3ff; --red:#ff4a4a; --neutral:#9a9a9a;
-      --primary:#00ffcc; --danger:#ff3333;
-    }
-    body{margin:0;overflow:hidden;background:#111;font-family:Segoe UI,Arial,sans-serif;user-select:none}
-    #game-container{position:fixed;inset:0}
-    #damage-overlay{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,0,0,0);transition:box-shadow .12s}
-    #smoke-overlay{
-      position:fixed; inset:0; pointer-events:none;
-      background:rgba(180,190,200,0);
-      backdrop-filter: blur(0px);
-      transition: background .08s, backdrop-filter .08s;
-    }
-    #hit-marker{
-      position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
-      width:24px;height:24px;pointer-events:none;opacity:0;transition:opacity .06s;
-    }
-    #hit-marker::before,#hit-marker::after{
-      content:"";position:absolute;left:50%;top:50%;width:20px;height:2px;background:#fff;transform-origin:center;
-    }
-    #hit-marker::before{transform:translate(-50%,-50%) rotate(45deg)}
-    #hit-marker::after{transform:translate(-50%,-50%) rotate(-45deg)}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高中静电场全景交互实验 - 拾光物理</title>
+    
+    <style>
+        :root {
+            --primary: #3b82f6; --positive: #ef4444; --negative: #0ea5e9;
+            --bg-color: #030712; --panel-bg: rgba(13, 20, 36, 0.85);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+        
+        canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
 
-    #announce{
-      position:fixed;left:50%;top:50px;transform:translateX(-50%);
-      color:#fff;background:rgba(0,0,0,.55);padding:7px 12px;border:1px solid #7aa;
-      border-radius:6px;pointer-events:none;font-size:14px;opacity:0;transition:opacity .18s;
-      z-index:120;
-    }
+        /* 顶部品牌水印 */
+        .brand-watermark {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 1.9rem; font-weight: 900; letter-spacing: 6px; color: transparent;
+            background: linear-gradient(90deg, #4ade80, #3b82f6, #c084fc);
+            background-clip: text; -webkit-background-clip: text;
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); z-index: 20; pointer-events: none;
+        }
 
-    #ui-layer{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 0 6px #000}
-    .hud-top,.hud-bottom{display:flex;justify-content:space-between;padding:14px 18px}
-    .hud-bottom{
-      position:absolute;left:0;right:0;bottom:0;align-items:flex-end;
-      background:linear-gradient(to top,rgba(0,0,0,.82),transparent)
-    }
-    #crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px}
-    .ch{position:absolute;background:var(--primary)}
-    .ch-h{left:0;top:8px;width:100%;height:2px}
-    .ch-v{top:0;left:8px;width:2px;height:100%}
-    .label{font-size:12px;color:#bbb}
-    .val{font-size:28px;font-weight:900}
-    .bar-wrap{width:220px;height:10px;background:#333;border:1px solid #555;margin-top:4px}
-    #health-fill{height:100%;width:100%;background:var(--danger)}
-    #stamina-fill{height:100%;width:100%;background:#33cc66}
-    #armor-fill{height:100%;width:100%;background:#4aa3ff}
-    .ammo{font-size:36px;font-weight:900}
-    .ammo-sub{font-size:18px;color:#aaa}
+        /* 玻璃面板通用样式 */
+        .glass-panel {
+            background: var(--panel-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8); z-index: 10;
+        }
 
-    #top-center{
-      position:fixed;left:50%;top:8px;transform:translateX(-50%);
-      display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none
-    }
-    #team-score{
-      background:rgba(0,0,0,.5);padding:6px 12px;border-radius:8px;
-      font-size:22px;font-weight:900;display:flex;gap:14px
-    }
-    #score-blue{color:var(--blue)} #score-red{color:var(--red)}
-    #point-panels{display:flex;gap:6px}
-    .pp{
-      width:78px;background:rgba(0,0,0,.5);border:1px solid #666;border-radius:6px;
-      padding:4px 6px;box-sizing:border-box
-    }
-    .pp-title{font-size:13px;font-weight:800;text-align:center}
-    .pp-bar{margin-top:4px;height:6px;background:#222;border:1px solid #444;border-radius:3px;overflow:hidden}
-    .pp-fill{height:100%;width:0%;background:#fff;transition:width .1s}
+        /* ---------------- 左侧控制台及折叠逻辑 ---------------- */
+        .control-panel { 
+            position: absolute; top: 20px; left: 20px; width: 360px; padding: 25px; 
+            max-height: calc(100vh - 40px); overflow-y: auto; pointer-events: auto;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: left center;
+        }
+        .control-panel.collapsed { transform: translateX(calc(-100% - 30px)); opacity: 0; pointer-events: none;}
+        .control-panel::-webkit-scrollbar { width: 5px; }
+        .control-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 5px;}
+        
+        /* 侧边悬浮折叠按钮 */
+        .panel-toggle {
+            position: absolute; top: 20px; width: 36px; height: 36px;
+            background: var(--panel-bg); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
+            color: #fff; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; z-index: 20; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); font-size: 1.1rem;
+        }
+        .panel-toggle:hover { background: rgba(59, 130, 246, 0.6); border-color: #3b82f6; transform: scale(1.1);}
+        
+        .left-toggle { left: 395px; }
+        .left-toggle.collapsed { left: 20px; background: rgba(59, 130, 246, 0.8); border-color: #60a5fa;}
 
-    #mini-map{
-      position:fixed; right:14px; top:14px; width:220px; height:220px;
-      border:2px solid rgba(255,255,255,.35);
-      background:rgba(10,15,20,.65); border-radius:8px; pointer-events:none
-    }
-    #kill-feed{position:fixed;right:14px;top:246px;display:flex;flex-direction:column;gap:6px}
-    .kill-msg{
-      background:rgba(0,0,0,.55);padding:5px 10px;border-left:3px solid var(--primary);
-      animation:fadeOut 3s forwards
-    }
-    @keyframes fadeOut{0%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translateX(20px)}}
+        .panel-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; text-align: center; color: #f8fafc; border-bottom: 2px solid rgba(59,130,246,0.5); padding-bottom: 12px;}
+        .section-label { font-size: 0.9rem; color: #60a5fa; margin: 20px 0 12px 0; font-weight: bold; border-left: 3px solid #60a5fa; padding-left: 8px;}
+        
+        .btn-group { display: flex; gap: 10px; margin-bottom: 12px; }
+        button {
+            flex: 1; padding: 10px 0; border: none; border-radius: 6px;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s ease; color: white; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        button:active { transform: scale(0.97); }
+        .btn-solid-pos { background: #ef4444; box-shadow: 0 4px 15px rgba(239,68,68,0.4); }
+        .btn-solid-neg { background: #0ea5e9; box-shadow: 0 4px 15px rgba(14,165,233,0.4); }
+        
+        .btn-outline { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.2); width: 100%; margin-bottom: 8px; color: #cbd5e1;}
+        .btn-outline:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.4); color: #fff;}
+        .btn-danger { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; width: 100%; margin-top: 10px;}
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
 
-    #menu-screen{
-      position:fixed;inset:0;z-index:100;background:rgba(10,15,20,.95);
-      display:flex;flex-direction:column;justify-content:center;align-items:center;color:#ddd
-    }
-    h1{color:var(--primary);font-size:46px;margin:0 0 10px;text-shadow:0 0 16px var(--primary)}
-    .controls{
-      background:rgba(255,255,255,.06);padding:18px 24px;border-radius:10px;line-height:1.7;
-      text-align:center;margin-bottom:20px;max-width:860px
-    }
-    .key{background:#444;padding:2px 7px;border-radius:4px;border-bottom:2px solid #222;font-family:monospace;font-weight:700}
-    button{cursor:pointer;border:none;padding:13px 32px;font-size:22px;font-weight:900;background:var(--primary);color:#000}
-  </style>
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.95rem; color: #cbd5e1;}
+        .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.8); transition: .4s; border-radius: 24px; border: 1px solid rgba(255,255,255,0.3); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #cbd5e1; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(59, 130, 246, 0.7); border-color: #3b82f6; }
+        input:checked + .slider:before { transform: translateX(18px); background-color: #fff; }
 
-  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
-    }
-  }
-  </script>
+        .custom-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.8rem; color: var(--text-muted); }
+        .input-group input, .input-group select { 
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); 
+            color: #fff; padding: 6px 10px; border-radius: 4px; font-family: monospace; outline: none;
+        }
+        .input-group input:focus { border-color: #3b82f6; }
+
+        /* 范围滑块样式 */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 10px 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+
+        /* ---------------- 右侧理论面板及折叠逻辑 ---------------- */
+        .theory-panel {
+            position: absolute; top: 20px; right: 20px; width: 440px; max-height: calc(100vh - 110px);
+            padding: 25px; overflow-y: auto; pointer-events: auto; user-select: text;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: right center;
+        }
+        .theory-panel.collapsed { transform: translateX(calc(100% + 30px)); opacity: 0; pointer-events: none;}
+        .theory-panel::-webkit-scrollbar { width: 5px; }
+        .theory-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 5px; }
+        
+        .right-toggle { right: 475px; }
+        .right-toggle.collapsed { right: 20px; background: rgba(59, 130, 246, 0.8); border-color: #60a5fa;}
+
+        .theory-section { margin-bottom: 25px; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 20px; }
+        .theory-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .theory-panel h3 { color: #38bdf8; margin-bottom: 15px; font-size: 1.15rem; border-left: 4px solid #38bdf8; padding-left: 10px;}
+        .theory-panel p, .theory-panel li { font-size: 0.95rem; line-height: 1.7; margin-bottom: 12px; color: #e2e8f0; text-align: justify;}
+        .highlight { color: #facc15; font-weight: bold; }
+
+        /* 原生 HTML/CSS 公式渲染 */
+        .math-box { 
+            background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; 
+            margin: 12px 0; border: 1px solid rgba(59,130,246,0.3); 
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .math-line { display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #a855f7; font-family: 'Times New Roman', Times, serif; }
+        .math-text { font-family: -apple-system, sans-serif; font-size: 0.9rem; color: #cbd5e1; margin-right: 15px; }
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 6px; }
+        .fraction .num { border-bottom: 1px solid #a855f7; padding: 0 5px; line-height: 1.2; }
+        .fraction .den { padding: 0 5px; line-height: 1.2; }
+        .sub { font-size: 0.7em; vertical-align: sub; }
+        .sup { font-size: 0.7em; vertical-align: super; }
+        .italic { font-style: italic; }
+        .vector { position: relative; display: inline-block; }
+        .vector::after { content: '→'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 0.7em; }
+        .math-inline { font-family: 'Times New Roman', Times, serif; font-size: 1.1em; color: #e2e8f0; padding: 0 2px;}
+
+        /* ---------------- 题库系统UI ---------------- */
+        .quiz-fab {
+            position: absolute; bottom: 25px; right: 20px; width: 440px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5); padding: 16px;
+            font-size: 1.1rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
+            border: 1px solid #a78bfa; animation: pulse 2.5s infinite; z-index: 15;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+        }
+        .quiz-fab.collapsed { transform: translateY(150px); opacity: 0; pointer-events: none;}
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(124, 58, 237, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+        }
+
+        .modal-bg {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 100;
+            justify-content: center; align-items: center; user-select: text;
+        }
+        .quiz-container {
+            width: 900px; max-width: 95%; max-height: 88vh; background: var(--panel-bg);
+            border: 1px solid #3b82f6; border-radius: 16px; padding: 40px; overflow-y: auto;
+            position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+        }
+        .quiz-container::-webkit-scrollbar { width: 6px; }
+        .quiz-container::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.6); border-radius: 10px; }
+        .close-btn { position: absolute; top: 20px; right: 25px; font-size: 32px; color: #64748b; cursor: pointer; transition: 0.2s; line-height: 1;}
+        .close-btn:hover { color: #fff; }
+        
+        .q-block { margin-bottom: 40px; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 30px; }
+        .q-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .q-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; color: #f1f5f9; line-height: 1.7; }
+        .options { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .opt-btn {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15);
+            text-align: left; padding: 16px 20px; font-size: 1.05rem; border-radius: 8px; color: #cbd5e1;
+            cursor: pointer; transition: all 0.2s; line-height: 1.5;
+        }
+        .opt-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); }
+        .opt-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; font-weight: bold;}
+        .opt-btn.wrong { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #f87171; text-decoration: line-through;}
+        .explanation {
+            display: none; margin-top: 25px; padding: 20px; background: rgba(0,0,0,0.5);
+            border-left: 5px solid #3b82f6; border-radius: 6px; font-size: 1rem; color: #bae6fd; line-height: 1.7;
+        }
+
+        /* 探针 HUD */
+        #probe-hud {
+            position: absolute; display: none; pointer-events: none;
+            background: rgba(15, 23, 42, 0.95); border: 1px solid #38bdf8;
+            padding: 12px 18px; border-radius: 8px; color: #fff; font-family: monospace;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); z-index: 50; transform: translate(20px, 20px);
+        }
+        .probe-line { margin: 6px 0; font-size: 1rem; }
+        .probe-val { color: #facc15; font-weight: bold; font-size: 1.1rem;}
+    </style>
 </head>
 <body>
-  <div id="game-container"></div>
-  <div id="damage-overlay"></div>
-  <div id="smoke-overlay"></div>
-  <div id="hit-marker"></div>
-  <div id="announce"></div>
 
-  <div id="ui-layer">
-    <div class="hud-top">
-      <div>
-        <div class="label">你的击杀</div>
-        <div class="val" id="my-kills">0</div>
-      </div>
-      <div id="kill-feed"></div>
+    <div class="brand-watermark">抖音拾光物理舒老师</div>
+
+    <!-- 左侧悬浮折叠按钮 -->
+    <div class="panel-toggle left-toggle" id="left-toggle" onclick="togglePanel('left')">❮</div>
+
+    <!-- 左侧控制面板 -->
+    <div class="control-panel glass-panel" id="left-panel">
+        <div class="panel-title">高中静电场中央控制台</div>
+        
+        <div class="section-label">1. 自定义场源注入 (定位靶向)</div>
+        <div class="custom-form">
+            <div class="input-group">
+                <label>X 坐标 (0 - 屏宽)</label>
+                <input type="number" id="inp-x" value="500">
+            </div>
+            <div class="input-group">
+                <label>Y 坐标 (0 - 屏高)</label>
+                <input type="number" id="inp-y" value="400">
+            </div>
+            <div class="input-group">
+                <label>电荷量(倍率)</label>
+                <input type="number" id="inp-q" value="2.0" step="0.5" min="0.5" max="10">
+            </div>
+            <div class="input-group">
+                <label>电性</label>
+                <select id="inp-sign">
+                    <option value="1">正电荷 (+)</option>
+                    <option value="-1">负电荷 (-)</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-outline" onclick="injectCustomCharge()" style="border-color:#38bdf8; color:#38bdf8;">🎯 在指定坐标生成电荷</button>
+
+        <div class="section-label">2. 预设经典高考模型</div>
+        <button class="btn-outline" onclick="presetDipole()">等量异种点电荷模型 (电偶极子)</button>
+        <button class="btn-outline" onclick="presetSame()">等量同种点电荷模型</button>
+        <button class="btn-danger" onclick="clearAll()">🗑️ 湮灭所有场源电荷</button>
+
+        <div class="section-label">3. 场域可视化图景</div>
+        <div class="toggle-row">
+            <span>超清电力线 (Field Lines)</span>
+            <label class="switch"><input type="checkbox" id="t-lines" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+            <span>连续电势热力图 (Heatmap)</span>
+            <label class="switch"><input type="checkbox" id="t-heat"><span class="slider"></span></label>
+        </div>
+        <button class="btn-outline" onclick="toggleProbe()" id="btn-probe" style="background: rgba(56,189,248,0.15); border-color:#38bdf8; margin-top:5px;">🔍 挂载高精度场强/电势探针</button>
+
+        <div class="section-label">4. 动态微观实验 (动力学分析)</div>
+        <div class="toggle-row">
+            <span style="color:#facc15; font-weight:bold;">开启实时受力矢量箭头 (F)</span>
+            <label class="switch"><input type="checkbox" id="t-force" onchange="toggleForceVector()"><span class="slider"></span></label>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 0.85rem; color: #cbd5e1; display:flex; justify-content:space-between;">
+                <span>时间流速调节 (慢动作观测)</span>
+                <span id="speed-val" style="color:#38bdf8; font-weight:bold;">1.0x</span>
+            </label>
+            <input type="range" id="inp-speed" min="0.1" max="2.0" step="0.1" value="1.0" oninput="updateSpeed(this.value)">
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-solid-pos" onclick="spawnTestParticle(1)">☄️ 释放质子</button>
+            <button class="btn-solid-neg" onclick="spawnTestParticle(-1)">☄️ 释放电子</button>
+        </div>
+        <button class="btn-outline" id="btn-pause" onclick="togglePause()" style="border-color:#a855f7; color:#d8b4fe;">⏸️ 暂停画面 (此时可详细分析轨迹)</button>
+        <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4; text-align: justify; margin-top: 10px;">💡 提示: 降低时间流速并开启“受力矢量箭头”，观察粒子做曲线运动时，合外力是如何始终指向轨迹凹侧的。</p>
     </div>
 
-    <div id="crosshair"><div class="ch ch-h"></div><div class="ch ch-v"></div></div>
+    <!-- 右侧悬浮折叠按钮 -->
+    <div class="panel-toggle right-toggle" id="right-toggle" onclick="togglePanel('right')">❯</div>
 
-    <div class="hud-bottom">
-      <div>
-        <div class="label">生命值</div>
-        <div class="bar-wrap"><div id="health-fill"></div></div>
+    <!-- 右侧严谨高中理论面板 -->
+    <div class="theory-panel glass-panel" id="right-panel">
+        <div class="theory-section">
+            <h3>第一章：电场强度与电场线</h3>
+            <p>电场是存在于电荷周围的客观物质。其基本性质是**对放入其中的电荷有力的作用**。</p>
+            <div class="math-box">
+                <div class="math-line">
+                    <span class="math-text">场强比值定义式</span>
+                    <span class="vector italic">E</span> = 
+                    <span class="fraction"><span class="num vector italic">F</span><span class="den italic">q</span></span>
+                </div>
+                <div class="math-line">
+                    <span class="math-text">真空中点电荷决定式</span>
+                    <span class="italic">E</span> = <span class="italic">k</span>
+                    <span class="fraction"><span class="num italic">Q</span><span class="den"><span class="italic">r</span><span class="sup">2</span></span></span>
+                </div>
+            </div>
+            <p><strong>学术剖析：</strong>场强是矢量。由定义式可知，方向规定为与正试探电荷的受力方向一致。空间中任意两条电场线绝不相交。</p>
+        </div>
 
-        <div class="label" style="margin-top:6px;">护甲</div>
-        <div class="bar-wrap"><div id="armor-fill"></div></div>
+        <div class="theory-section">
+            <h3>第二章：电势与等势面</h3>
+            <p>电势描述了电场的能的属性。**顺着电场线的方向，电势不仅降低，而且是降落最快的方向**。</p>
+            <div class="math-box">
+                <div class="math-line">
+                    <span class="math-text">电势定义式</span>
+                    <span class="italic">φ</span> = 
+                    <span class="fraction"><span class="num italic">E<span class="sub">p</span></span><span class="den italic">q</span></span>
+                </div>
+            </div>
+            <p><strong>核心几何性质：</strong></p>
+            <ul>
+                <li>在同一等势面上移动任意电荷，电场力恒不做功。</li>
+                <li>等势面必然与电场线<span class="highlight">处处正交（垂直）</span>。</li>
+            </ul>
+        </div>
 
-        <div class="label" style="margin-top:6px;">体力</div>
-        <div class="bar-wrap"><div id="stamina-fill"></div></div>
-      </div>
-
-      <div style="text-align:right; margin-right:8px;">
-        <div class="label">主武器（B 切换全自动/半自动）</div>
-        <div class="ammo"><span id="ammo-cur">35</span><span class="ammo-sub">/∞</span></div>
-        <div class="label" id="mode-text">模式：全自动</div>
-        <div class="label" id="inv-text">投掷：F手雷(1) G烟雾(1) V燃烧(1)</div>
-        <div class="label" id="extra-text">补给：6医疗包(0) 7护甲板(0) ｜ X UAV(0) ｜ Z 标记点</div>
-      </div>
+        <div class="theory-section">
+            <h3>第三章：静电力做功与动力学</h3>
+            <p>静电力作为一种保守力，其做功**只与始末位置的电势差有关，与运动路径无关**。</p>
+            <div class="math-box">
+                <div class="math-line">
+                    <span class="math-text">做功核心方程</span>
+                    <span class="italic">W<span class="sub">AB</span></span> = <span class="italic">q</span><span class="italic">U<span class="sub">AB</span></span> = <span class="italic">q</span>(<span class="italic">φ<span class="sub">A</span></span> - <span class="italic">φ<span class="sub">B</span></span>)
+                </div>
+                <div class="math-line">
+                    <span class="math-text">势能转化定理</span>
+                    <span class="italic">W<span class="sub">电</span></span> = -Δ<span class="italic">E<span class="sub">p</span></span>
+                </div>
+            </div>
+            <p><strong>曲线运动规律：</strong>做曲线运动的带电粒子，其所受的电场力（合外力）必然指向轨迹的<span class="highlight">凹侧</span>。</p>
+        </div>
     </div>
-  </div>
 
-  <div id="top-center">
-    <div id="team-score"><span id="score-blue">蓝队 0</span><span id="score-red">红队 0</span></div>
-    <div id="point-panels">
-      <div class="pp" id="pp-A"><div class="pp-title">A</div><div class="pp-bar"><div class="pp-fill" id="ppf-A"></div></div></div>
-      <div class="pp" id="pp-B"><div class="pp-title">B</div><div class="pp-bar"><div class="pp-fill" id="ppf-B"></div></div></div>
-      <div class="pp" id="pp-C"><div class="pp-title">C</div><div class="pp-bar"><div class="pp-fill" id="ppf-C"></div></div></div>
-      <div class="pp" id="pp-D"><div class="pp-title">D</div><div class="pp-bar"><div class="pp-fill" id="ppf-D"></div></div></div>
+    <!-- 题库按钮与模态框 -->
+    <button class="quiz-fab glass-panel" id="quiz-btn" onclick="openQuiz()">📝 启动互动知识巩固系统 (10道高考真题演练)</button>
+
+    <div class="modal-bg" id="quizModal">
+        <div class="quiz-container">
+            <div class="close-btn" onclick="closeQuiz()">×</div>
+            <h2 style="text-align: center; color: #60a5fa; margin-bottom: 30px; font-size: 1.6rem; letter-spacing: 2px;">静电场核心考点十连测</h2>
+            
+            <div class="q-block" id="q1">
+                <div class="q-title">1. 【功与能计算】利用探针功能测得空间某点 A 的电势为 <span class="math-inline"><i>φ<sub>A</sub></i> = 800 V</span>，点 B 的电势为 <span class="math-inline"><i>φ<sub>B</sub></i> = -200 V</span>。若将一电荷量为 <span class="math-inline"><i>q</i> = +2.0 × 10<sup>-6</sup> C</span> 的试探电荷从 A 移到 B，电场力做的功 <span class="math-inline"><i>W<sub>AB</sub></i></span> 是多少？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q1', this, false)">A. <span class="math-inline">-2.0 × 10<sup>-3</sup> J</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q1', this, false)">B. <span class="math-inline">1.2 × 10<sup>-3</sup> J</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q1', this, true)">C. <span class="math-inline">2.0 × 10<sup>-3</sup> J</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q1', this, false)">D. <span class="math-inline">-1.2 × 10<sup>-3</sup> J</span></button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：C</strong><br>
+                    <p style="margin-top:8px;">根据做功核心方程进行代数运算：</p>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; font-size: 1.1em; color: #e2e8f0;">
+                        W<sub>AB</sub> = q(φ<sub>A</sub> - φ<sub>B</sub>)<br>
+                        W<sub>AB</sub> = (+2.0 × 10<sup>-6</sup> C) × [800 V - (-200 V)]<br>
+                        W<sub>AB</sub> = 2.0 × 10<sup>-6</sup> × 1000 = 2.0 × 10<sup>-3</sup> J
+                    </div>
+                </div>
+            </div>
+
+            <div class="q-block" id="q2">
+                <div class="q-title">2. 【受力与轨迹关系】关于带电粒子在非匀强电场中做曲线运动的轨迹、电场力及速度的关系，以下表述正确的是？（💡 提示：在左侧开启“受力矢量箭头”并缓慢播放观察）</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q2', this, false)">A. 粒子所受电场力的方向始终与运动轨迹的切线方向一致</button>
+                    <button class="opt-btn" onclick="checkAnswer('q2', this, false)">B. 粒子的运动轨迹必然与某一条电场线完全重合</button>
+                    <button class="opt-btn" onclick="checkAnswer('q2', this, true)">C. 粒子所受的电场力（合外力）始终指向其轨迹曲线的凹侧</button>
+                    <button class="opt-btn" onclick="checkAnswer('q2', this, false)">D. 若粒子动能增加，说明电场力方向与速度方向必定成直角</button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：C</strong><br>
+                    <ul style="margin-top:8px; margin-left: 20px;">
+                        <li><strong>A错：</strong>轨迹的切线方向是<strong>速度</strong>方向，受力方向不一定与速度共线。</li>
+                        <li><strong>B错：</strong>电场线一般是曲线，粒子受到的电场力沿切线方向，由于惯性粒子会偏离电场线。</li>
+                        <li><strong>C对：</strong>动力学定则：做曲线运动时，合外力必须指向轨迹弯曲的凹侧，以提供向心加速度。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="q-block" id="q3">
+                <div class="q-title">3. 【等量同种电荷对称性】在“等量同种正电荷”连线的中垂线上，从连线中点向两侧无穷远处延伸，关于电场强度大小 <span class="math-inline"><i>E</i></span> 和电势 <span class="math-inline"><i>φ</i></span> 的变化规律，正确的是？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q3', this, false)">A. 场强 <span class="math-inline"><i>E</i></span> 单调减小，电势 <span class="math-inline"><i>φ</i></span> 单调减小</button>
+                    <button class="opt-btn" onclick="checkAnswer('q3', this, true)">B. 场强 <span class="math-inline"><i>E</i></span> 先增大后减小，电势 <span class="math-inline"><i>φ</i></span> 单调减小</button>
+                    <button class="opt-btn" onclick="checkAnswer('q3', this, false)">C. 场强 <span class="math-inline"><i>E</i></span> 单调增大，电势 <span class="math-inline"><i>φ</i></span> 先增大后减小</button>
+                    <button class="opt-btn" onclick="checkAnswer('q3', this, false)">D. 场强 <span class="math-inline"><i>E</i></span> 始终为零，电势 <span class="math-inline"><i>φ</i></span> 恒定不变</button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：B</strong><br>
+                    <ul style="margin-left: 20px; margin-top:8px;">
+                        <li><strong>场强：</strong>连线中点处合场强 <span class="math-inline"><i>E</i> = 0</span>。无穷远处场强也为 0。故先增大后减小。</li>
+                        <li><strong>电势：</strong>顺着电场线方向（指向无穷远）电势必然降低，故单调减小。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="q-block" id="q4">
+                <div class="q-title">4. 【电容器动态分析】平行板电容器充电后与电源断开，然后将两极板间的距离增大。关于此过程，下列说法正确的是？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q4', this, false)">A. 电容器的电容变大，极板间场强变大</button>
+                    <button class="opt-btn" onclick="checkAnswer('q4', this, false)">B. 电容器的带电量减小，极板间电势差变小</button>
+                    <button class="opt-btn" onclick="checkAnswer('q4', this, true)">C. 电容器的极板间场强保持不变，极板间电势差增大</button>
+                    <button class="opt-btn" onclick="checkAnswer('q4', this, false)">D. 电容器的电容减小，极板间场强减小</button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：C</strong><br>
+                    <p style="margin-top:8px;">断开电源，说明带电量 <span class="math-inline"><i>Q</i></span> 保持不变。</p>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; font-size: 1.1em; color: #e2e8f0;">
+                        1. 距离 d 增大，由 C ∝ 1/d 知，电容 C 减小。<br>
+                        2. Q 不变，C 减小，由 U = Q / C 知，电势差 U 增大。<br>
+                        3. 场强推导: E = U/d = (Q/C)/d ∝ Q，故场强 E 保持不变。
+                    </div>
+                </div>
+            </div>
+
+            <div class="q-block" id="q5">
+                <div class="q-title">5. 【带电粒子偏转】一电子以初速度 <span class="math-inline"><i>v<sub>0</sub></i></span> 垂直射入匀强偏转电场，飞出电场时侧移量为 <span class="math-inline"><i>y</i></span>。若将初速度增加为原来的 2 倍，其他条件不变，则侧移量变为？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q5', this, false)">A. <span class="math-inline">2<i>y</i></span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q5', this, false)">B. <span class="math-inline"><i>y</i> / 2</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q5', this, true)">C. <span class="math-inline"><i>y</i> / 4</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q5', this, false)">D. <span class="math-inline">4<i>y</i></span></button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：C</strong><br>
+                    <p style="margin-top:8px;">类平抛运动运动学方程：</p>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; font-size: 1.1em; color: #e2e8f0;">
+                        侧移量 y = (1/2)at<sup>2</sup> = (1/2) * (qE/m) * (L / v<sub>0</sub>)<sup>2</sup>
+                    </div>
+                    <p>可见侧移量 <span class="math-inline"><i>y</i></span> 与初速度 <span class="math-inline"><i>v<sub>0</sub></i></span> 的平方成反比。初速度变为 2 倍，侧移量变为原来的 1/4。</p>
+                </div>
+            </div>
+
+            <div class="q-block" id="q6">
+                <div class="q-title">6. 【静电平衡现象】把一个原本不带电的实心金属球放入匀强电场中，达到静电平衡状态后，下列描述物理图景正确的是？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q6', this, false)">A. 金属球内部的场强处处不为零，且与外加电场方向一致</button>
+                    <button class="opt-btn" onclick="checkAnswer('q6', this, false)">B. 金属球表面不一定是等势面，但内部电势处处为零</button>
+                    <button class="opt-btn" onclick="checkAnswer('q6', this, true)">C. 金属球内部的净电荷为零，感应电荷仅分布在外表面</button>
+                    <button class="opt-btn" onclick="checkAnswer('q6', this, false)">D. 外部电场线进入金属球内部，导致内部场强叠加增大</button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：C</strong><br>
+                    <ul style="margin-top:8px; margin-left: 20px;">
+                        <li><strong>静电平衡条件：</strong>导体内部合场强处处为零（外电场与感应电荷产生的附加电场等大反向），整个导体是一个等势体，表面是等势面。故A、B、D错。</li>
+                        <li><strong>电荷分布：</strong>处于静电平衡的导体，内部没有净电荷，电荷只分布在导体的外表面上。故C正确。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="q-block" id="q7">
+                <div class="q-title">7. 【匀强电场电势分布】在匀强电场中，有 A、B 两点，已知 <span class="math-inline"><i>φ<sub>A</sub></i> = 10 V</span>，<span class="math-inline"><i>φ<sub>B</sub></i> = 2 V</span>，A 与 B 的直线距离为 <span class="math-inline"><i>d</i> = 0.2 m</span>。则该匀强电场的电场强度 <span class="math-inline"><i>E</i></span> 的大小可能是？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q7', this, false)">A. <span class="math-inline">20 V/m</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q7', this, false)">B. <span class="math-inline">30 V/m</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q7', this, true)">C. <span class="math-inline">50 V/m</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q7', this, false)">D. <span class="math-inline">10 V/m</span></button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：C</strong><br>
+                    <p style="margin-top:8px;">根据匀强电场公式 <span class="math-inline"><i>E</i> = <i>U</i> / <i>d</i>'</span>，其中 <span class="math-inline"><i>d</i>'</span> 是沿电场线方向的有效距离。</p>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; font-size: 1.1em; color: #e2e8f0;">
+                        由于 d' ≤ d (实际距离)，<br>
+                        所以 E ≥ U<sub>AB</sub> / d = (10 - 2) / 0.2 = 40 V/m。
+                    </div>
+                    <p>选项中只有 50 V/m 大于等于 40 V/m，故选 C。</p>
+                </div>
+            </div>
+
+            <div class="q-block" id="q8">
+                <div class="q-title">8. 【复合场受力分析】密立根油滴实验中，一带负电的油滴在水平放置的平行极板间保持静止（受重力与电场力平衡）。若不断开电源，将两极板间距 <span class="math-inline"><i>d</i></span> 略微拉大，油滴将如何运动？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q8', this, false)">A. 向上做匀加速直线运动</button>
+                    <button class="opt-btn" onclick="checkAnswer('q8', this, true)">B. 向下做匀加速直线运动</button>
+                    <button class="opt-btn" onclick="checkAnswer('q8', this, false)">C. 继续保持静止状态</button>
+                    <button class="opt-btn" onclick="checkAnswer('q8', this, false)">D. 向下做匀速直线运动</button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：B</strong><br>
+                    <ul style="margin-top:8px; margin-left: 20px;">
+                        <li>不断开电源，极板间电压 <span class="math-inline"><i>U</i></span> 保持不变。</li>
+                        <li>间距 <span class="math-inline"><i>d</i></span> 变大，由 <span class="math-inline"><i>E</i> = <i>U</i>/<i>d</i></span> 可知场强 <span class="math-inline"><i>E</i></span> 减小。</li>
+                        <li>油滴受到的向上电场力 <span class="math-inline"><i>F</i> = <i>qE</i></span> 减小，此时重力 <span class="math-inline"><i>mg</i> > <i>qE</i></span>，油滴所受合外力向下，故向下做匀加速直线运动。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="q-block" id="q9">
+                <div class="q-title">9. 【示波管原理】电子在加速电场（电压 <span class="math-inline"><i>U<sub>1</sub></i></span>）中由静止加速后，垂直射入偏转电场（电压 <span class="math-inline"><i>U<sub>2</sub></i></span>，板长 <span class="math-inline"><i>L</i></span>，板间距 <span class="math-inline"><i>d</i></span>）。飞出时偏转角正切值 <span class="math-inline">tan<i>θ</i></span> 的表达式为？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q9', this, true)">A. <span class="math-inline"><i>U<sub>2</sub>L</i> / (2<i>U<sub>1</sub>d</i>)</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q9', this, false)">B. <span class="math-inline"><i>U<sub>1</sub>L</i> / (2<i>U<sub>2</sub>d</i>)</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q9', this, false)">C. <span class="math-inline"><i>U<sub>2</sub>d</i> / (2<i>U<sub>1</sub>L</i>)</span></button>
+                    <button class="opt-btn" onclick="checkAnswer('q9', this, false)">D. <span class="math-inline">2<i>U<sub>2</sub>L</i> / (<i>U<sub>1</sub>d</i>)</span></button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：A</strong><br>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; font-size: 1.1em; color: #e2e8f0;">
+                        1. 加速段：eU<sub>1</sub> = (1/2)mv<sub>0</sub><sup>2</sup><br>
+                        2. 偏转段侧向速度：v<sub>y</sub> = at = (eU<sub>2</sub>/md) * (L/v<sub>0</sub>)<br>
+                        3. 偏转角正切：tanθ = v<sub>y</sub> / v<sub>0</sub> = eU<sub>2</sub>L / (mdv<sub>0</sub><sup>2</sup>)<br>
+                        代入 mv<sub>0</sub><sup>2</sup> = 2eU<sub>1</sub>，得 tanθ = U<sub>2</sub>L / (2U<sub>1</sub>d)
+                    </div>
+                </div>
+            </div>
+
+            <div class="q-block" id="q10" style="border-bottom:none;">
+                <div class="q-title">10. 【轨迹与电性判断】在等量异种电荷的电场中，某粒子从两电荷连线中垂线上的 P 点，以平行于连线的初速度射入。若观测到其轨迹向负场源电荷一侧偏转，则该试探粒子必定带？</div>
+                <div class="options">
+                    <button class="opt-btn" onclick="checkAnswer('q10', this, true)">A. 正电荷</button>
+                    <button class="opt-btn" onclick="checkAnswer('q10', this, false)">B. 负电荷</button>
+                    <button class="opt-btn" onclick="checkAnswer('q10', this, false)">C. 不带电</button>
+                    <button class="opt-btn" onclick="checkAnswer('q10', this, false)">D. 无法确定</button>
+                </div>
+                <div class="explanation">
+                    <strong>【深度解析】 正确答案：A</strong><br>
+                    <p style="margin-top:8px;">根据曲线运动受力规律，粒子轨迹向负电荷侧弯曲，说明粒子受到的静电吸引力指向负电荷一侧。异种电荷相互吸引，因此该粒子必然带有正电荷。也可以通过“受力指向轨迹凹侧”原理来判断合力方向，从而判定电性。</p>
+                </div>
+            </div>
+
+        </div>
     </div>
-  </div>
 
-  <canvas id="mini-map" width="220" height="220"></canvas>
-
-  <div id="menu-screen">
-    <h1>宇宙宙长-三角洲</h1>
-    <div class="controls">
-      <div><span class="key">WASD</span> 移动，<span class="key">SPACE</span> 跳跃/攀爬，<span class="key">C</span> 下蹲，<span class="key">ALT</span> 战术慢走</div>
-      <div><span class="key">SHIFT</span> 冲刺，<span class="key">CTRL</span> 滑铲，<span class="key">E</span> 救援倒地队友</div>
-      <div><span class="key">左键</span> 射击，<span class="key">右键</span> 开镜，<span class="key">R</span> 换弹，<span class="key">B</span> 切换开火模式</div>
-      <div><span class="key">F/G/V</span> 投掷（按住显示预瞄抛物线，松开投掷）</div>
-      <div><span class="key">6</span> 医疗包，<span class="key">7</span> 护甲板，<span class="key">X</span> UAV扫描，<span class="key">Z</span> 标记点</div>
-      <div>特色：卡模脱困、重烟雾遮蔽+AI失明、救援系统、可捡装备、性能优化</div>
+    <!-- 探针 HUD -->
+    <div id="probe-hud">
+        <div class="probe-line" style="color:#cbd5e1; font-size:0.85rem; margin-bottom:10px;">拾光物理精密传感器</div>
+        <div class="probe-line">空间坐标: (<span id="p-x" class="probe-val">0</span>, <span id="p-y" class="probe-val">0</span>)</div>
+        <div class="probe-line">电场强度 <i>E</i>: <span id="p-e" class="probe-val" style="color:#f87171;">0.00</span> N/C</div>
+        <div class="probe-line">标量电势 <i>φ</i>: <span id="p-v" class="probe-val" style="color:#60a5fa;">0.00</span> V</div>
     </div>
-    <button id="start-btn">开始行动</button>
-  </div>
 
-<script type="module">
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-
-const CFG = {
-  mapSize: 320,
-  winScore: 250,
-
-  player: {
-    walk: 7.0, sprint: 11.0, crouch: 3.6,
-    jump: 12.0, gravity: 30,
-    standEye: 1.6, crouchEye: 1.0,
-    standH: 1.8, crouchH: 1.1, r: 0.36,
-    hp: 125, armorMax: 40
-  },
-
-  weapon: {
-    mag: 35, damage: 22, headMult: 1.9,
-    fireInt: 0.085, reload: 1.45, maxRange: 180
-  },
-
-  recoil: {
-    recover: 11,
-    camPitchBase: 0.0042,
-    camPitchGrow: 0.00028,
-    camYaw: 0.0015
-  },
-
-  bots: {
-    teamCount: 5,
-    hp: 95,
-    speed: 5.7,
-    fireMin: 0.16,
-    fireMax: 0.32,
-    sight: 58,
-    thinkInt: 0.24,
-    focusPlayerProb: 0.30,
-    damageToPlayerScale: 0.68,
-    missVsPlayer: 0.35,
-    downBleedout: 18
-  },
-
-  points: { r: 6, captureTime: 2.2 },
-
-  throwables: {
-    cd: 1.2,
-    frag: { fuse: 2.0, radius: 7.5, damage: 95, speed: 13.4, up: 7.2 },
-    smoke: { fuse: 1.2, duration: 9, radius: 8.5, speed: 13.0, up: 7.0 },
-    molotov: { fuse: 0.9, duration: 8, radius: 4.7, dps: 22, speed: 13.2, up: 7.0 }
-  },
-
-  revive: { holdTime: 2.2, dist: 2.5 },
-
-  perf: {
-    minPixelRatio: 0.70,
-    maxPixelRatio: 1.15,
-    uiHz: 15,
-    minimapHz: 10,
-    shadowUpdateInterval: 22
-  }
-};
-
-let scene, camera, renderer, controls;
-const wallBoxes = [], obstacles = [];
-let wallInstanced;
-
-let frameCount = 0;
-let dynamicPixelRatio = Math.min(devicePixelRatio, 1.0);
-let fpsAcc = 0, fpsFrames = 0;
-
-const move = { w:false, a:false, s:false, d:false, eHold:false };
-const state = {
-  playing:false, last:performance.now(), canJump:false,
-  isCrouching:false, isSprinting:false, isScoped:false, isTacticalWalk:false,
-  firing:false, fireCD:0, reloading:false, ammo:CFG.weapon.mag,
-  myKills:0, hp:CFG.player.hp, armor:CFG.player.armorMax,
-  scoreBlue:0, scoreRed:0, scoreTick:0, respawning:false, throwCD:0,
-  recoilPitch:0, recoilYaw:0, recoilShot:0,
-  stamina:100, fireMode:'auto',
-  _uiTimer:0, _mmTimer:0, fps:60,
-  throwAimType:null,
-  reviveTarget:null, reviveProgress:0,
-  slideActive:false, slideT:0, slideDir:new THREE.Vector3(),
-  uavCharges:0, uavTime:0
-};
-
-const velocity = new THREE.Vector3();
-let playerHeight = CFG.player.standH, eyeTarget = CFG.player.standEye;
-const mantle = { active:false, t:0, dur:.24, from:new THREE.Vector3(), to:new THREE.Vector3() };
-
-let nextId = 1;
-const actors = [];
-let playerActor = null;
-
-const points = [];
-const pointNames = ['A','B','C','D'];
-
-const grenades = [];
-const smokeClouds = [];
-const fireZones = [];
-const lootDrops = [];   // {type,mesh,pos,life}
-let pingMarker = null;  // {mesh,pos,life}
-
-let fpGun, muzzleFlash;
-let audioCtx;
-
-let throwPreviewLine, throwPreviewGeom, throwPreviewMat;
-
-const _box = new THREE.Box3();
-const _v3 = new THREE.Vector3();
-const _ray = new THREE.Ray();
-const _up = new THREE.Vector3(0,1,0);
-
-const reviveTip = document.createElement('div');
-reviveTip.style.cssText = `
-position:fixed;left:50%;bottom:120px;transform:translateX(-50%);
-padding:8px 12px;background:rgba(0,0,0,.55);color:#fff;border:1px solid #888;border-radius:6px;
-font-size:14px;pointer-events:none;display:none;z-index:120;
-`;
-document.body.appendChild(reviveTip);
-
-init();
-
-function init(){
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x171923);
-  scene.fog = new THREE.FogExp2(0x171923, 0.007);
-
-  camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-  camera.position.set(0,2,0);
-
-  renderer = new THREE.WebGLRenderer({ antialias:false, powerPreference:'high-performance' });
-  renderer.setPixelRatio(dynamicPixelRatio);
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.shadowMap.autoUpdate = false;
-  document.getElementById('game-container').appendChild(renderer.domElement);
-
-  controls = new PointerLockControls(camera, document.body);
-
-  scene.add(new THREE.HemisphereLight(0xffffff,0x444444,.42));
-  const sun = new THREE.DirectionalLight(0xffffff,.78);
-  sun.position.set(100,180,90);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024,1024);
-  sun.shadow.camera.left=-180; sun.shadow.camera.right=180; sun.shadow.camera.top=180; sun.shadow.camera.bottom=-180;
-  scene.add(sun);
-  scene.add(new THREE.AmbientLight(0xffffff,.24));
-
-  buildMap();
-  createPoints();
-  createFPGun();
-  createThrowPreview();
-
-  bindEvents();
-  updateHUD();
-  animate();
-}
-
-function bindEvents(){
-  document.addEventListener('contextmenu', e=>e.preventDefault());
-  window.addEventListener('resize', onResize);
-  document.addEventListener('keydown', onKeyDown);
-  document.addEventListener('keyup', onKeyUp);
-  document.addEventListener('mousedown', onMouseDown);
-  document.addEventListener('mouseup', onMouseUp);
-  document.getElementById('start-btn').addEventListener('click', startMatch);
-}
-function onResize(){
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
-}
-
-/* ---------- MAP ---------- */
-function buildMap(){
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(CFG.mapSize, CFG.mapSize),
-    new THREE.MeshStandardMaterial({ color:0x232630, roughness:1 })
-  );
-  floor.rotation.x = -Math.PI/2;
-  floor.receiveShadow = true;
-  scene.add(floor);
-
-  addStaticBox(0,6,-CFG.mapSize/2,CFG.mapSize,12,2,0x606060);
-  addStaticBox(0,6, CFG.mapSize/2,CFG.mapSize,12,2,0x606060);
-  addStaticBox(-CFG.mapSize/2,6,0,2,12,CFG.mapSize,0x606060);
-  addStaticBox( CFG.mapSize/2,6,0,2,12,CFG.mapSize,0x606060);
-
-  const cnt = 88;
-  wallInstanced = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1,1,1),
-    new THREE.MeshStandardMaterial({ color:0x5b5b5b, roughness:.82 }),
-    cnt
-  );
-  wallInstanced.receiveShadow = true;
-  wallInstanced.castShadow = false;
-  wallInstanced.frustumCulled = false;
-  scene.add(wallInstanced);
-
-  const d = new THREE.Object3D();
-  let idx = 0;
-  for(let i=0;i<cnt;i++){
-    const x=(Math.random()-.5)*(CFG.mapSize-56);
-    const z=(Math.random()-.5)*(CFG.mapSize-56);
-    if(Math.abs(x)<24 && Math.abs(z)<24){i--;continue;}
-    const sx=4+Math.random()*13, sz=4+Math.random()*13, sy=2+Math.random()*8;
-    d.position.set(x,sy/2,z);
-    d.scale.set(sx,sy,sz);
-    d.updateMatrix();
-    wallInstanced.setMatrixAt(idx++, d.matrix);
-
-    const b = new THREE.Box3(new THREE.Vector3(x-sx/2,0,z-sz/2), new THREE.Vector3(x+sx/2,sy,z+sz/2));
-    wallBoxes.push(b); obstacles.push(b);
-  }
-  wallInstanced.instanceMatrix.needsUpdate = true;
-
-  for(let i=0;i<26;i++){
-    const sx=1.8+Math.random()*2.8, sz=1.8+Math.random()*2.8, sy=.8+Math.random()*.8;
-    const x=(Math.random()-.5)*(CFG.mapSize-48), z=(Math.random()-.5)*(CFG.mapSize-48);
-    const m = new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), new THREE.MeshStandardMaterial({color:0x4f4f4f,roughness:.72}));
-    m.position.set(x,sy/2,z);
-    m.receiveShadow=true;
-    scene.add(m);
-
-    const b = new THREE.Box3(new THREE.Vector3(x-sx/2,0,z-sz/2), new THREE.Vector3(x+sx/2,sy,z+sz/2));
-    wallBoxes.push(b); obstacles.push(b);
-  }
-}
-function addStaticBox(x,y,z,sx,sy,sz,color){
-  const m = new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), new THREE.MeshStandardMaterial({color,roughness:.85}));
-  m.position.set(x,y,z);
-  m.receiveShadow = true;
-  scene.add(m);
-  wallBoxes.push(new THREE.Box3(new THREE.Vector3(x-sx/2,y-sy/2,z-sz/2), new THREE.Vector3(x+sx/2,y+sy/2,z+sz/2)));
-}
-
-/* ---------- Points ---------- */
-function createPoints(){
-  const spots=[new THREE.Vector3(-72,0,-72),new THREE.Vector3(72,0,-72),new THREE.Vector3(-72,0,72),new THREE.Vector3(72,0,72)];
-  for(let i=0;i<4;i++){
-    const p=spots[i], name=pointNames[i];
-    const base=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.7,.4,16),new THREE.MeshStandardMaterial({color:0x777777}));
-    base.position.set(p.x,.2,p.z);
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(CFG.points.r,.12,10,40),new THREE.MeshBasicMaterial({color:0x999999}));
-    ring.rotation.x=Math.PI/2; ring.position.set(p.x,.06,p.z);
-    scene.add(base,ring);
-    points.push({name,pos:p,owner:null,capturedBy:null,captureTeam:null,prog:0,mesh:base,ring});
-  }
-}
-
-/* ---------- Models ---------- */
-function createSoldier(team){
-  const g=new THREE.Group();
-  const skin=new THREE.MeshStandardMaterial({color:0xe0b28f,roughness:.65});
-  const cloth=new THREE.MeshStandardMaterial({color:team==='blue'?0x2d5fbf:0xbf2d2d,roughness:.78});
-  const dark=new THREE.MeshStandardMaterial({color:0x1f1f1f,roughness:.7});
-
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(.64,.86,.36),cloth); torso.position.y=1.35;
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.23,12,12),skin); head.position.y=1.95;
-  const la=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.55,5,8),cloth); la.position.set(-.42,1.35,0); la.rotation.z=.12;
-  const ra=la.clone(); ra.position.x=.42; ra.rotation.z=-.12;
-  const ll=new THREE.Mesh(new THREE.CapsuleGeometry(.11,.68,5,8),dark); ll.position.set(-.17,.55,0);
-  const rl=ll.clone(); rl.position.x=.17;
-
-  const gm=new THREE.MeshStandardMaterial({color:0x202020,metalness:.6,roughness:.4});
-  const gun=new THREE.Group();
-  const gb=new THREE.Mesh(new THREE.BoxGeometry(.08,.1,.45),gm); gb.position.set(0,0,.05);
-  const br=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,.42,8),gm); br.rotation.x=Math.PI/2; br.position.set(0,.03,-.2);
-  gun.add(gb,br); gun.position.set(.17,1.35,.22); gun.rotation.set(.1,0,0);
-
-  g.add(torso,head,la,ra,ll,rl,gun);
-  g.userData.parts={la,ra,ll,rl,gun};
-  return g;
-}
-function createFPGun(){
-  fpGun=new THREE.Group();
-  const gm=new THREE.MeshStandardMaterial({color:0x232323,roughness:.35,metalness:.75});
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.12,.14,.6),gm); body.position.set(0,0,.2);
-  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.02,.03,.72,8),gm); barrel.rotation.x=Math.PI/2; barrel.position.set(0,.04,-.24);
-  const mag=new THREE.Mesh(new THREE.BoxGeometry(.08,.28,.14),new THREE.MeshStandardMaterial({color:0x111})); mag.position.set(0,-.14,.09); mag.rotation.x=.18;
-  fpGun.add(body,barrel,mag);
-
-  muzzleFlash=new THREE.Mesh(
-    new THREE.PlaneGeometry(.34,.34),
-    new THREE.MeshBasicMaterial({color:0xffaa00,transparent:true,opacity:0,side:THREE.DoubleSide,depthTest:false})
-  );
-  muzzleFlash.position.set(0,.05,-.68); muzzleFlash.renderOrder=999;
-  fpGun.add(muzzleFlash);
-
-  camera.add(fpGun);
-  scene.add(camera);
-}
-function createThrowPreview(){
-  throwPreviewGeom = new THREE.BufferGeometry();
-  throwPreviewMat = new THREE.LineBasicMaterial({ color:0x00ffcc, transparent:true, opacity:0.7 });
-  throwPreviewLine = new THREE.Line(throwPreviewGeom, throwPreviewMat);
-  throwPreviewLine.visible = false;
-  scene.add(throwPreviewLine);
-}
-
-/* ---------- Match ---------- */
-function startMatch(){
-  document.getElementById('menu-screen').style.display='none';
-  ensureAudio();
-  resetMatch();
-  spawnTeams();
-  controls.lock();
-  state.playing=true;
-}
-function resetMatch(){
-  actors.forEach(a=>{if(a.model) scene.remove(a.model);});
-  actors.length=0;
-  grenades.forEach(g=>scene.remove(g.mesh)); grenades.length=0;
-  smokeClouds.forEach(s=>scene.remove(s.mesh)); smokeClouds.length=0;
-  fireZones.forEach(f=>scene.remove(f.mesh)); fireZones.length=0;
-  lootDrops.forEach(l=>scene.remove(l.mesh)); lootDrops.length=0;
-  if(pingMarker){ scene.remove(pingMarker.mesh); pingMarker=null; }
-
-  points.forEach(p=>{p.owner=null;p.capturedBy=null;p.captureTeam=null;p.prog=0;});
-
-  Object.assign(state,{
-    myKills:0,hp:CFG.player.hp,armor:CFG.player.armorMax,ammo:CFG.weapon.mag,reloading:false,
-    scoreBlue:0,scoreRed:0,scoreTick:0,throwCD:0,fireCD:0,firing:false,
-    isCrouching:false,isSprinting:false,isScoped:false,isTacticalWalk:false,
-    respawning:false,stamina:100,fireMode:'auto',
-    recoilPitch:0,recoilYaw:0,recoilShot:0,
-    throwAimType:null,reviveTarget:null,reviveProgress:0,
-    slideActive:false, slideT:0,
-    uavCharges:0, uavTime:0,
-    _uiTimer:0,_mmTimer:0
-  });
-
-  move.w=move.a=move.s=move.d=false; move.eHold=false;
-  velocity.set(0,0,0);
-  camera.position.set(0,CFG.player.standEye,0);
-  playerHeight=CFG.player.standH; eyeTarget=CFG.player.standEye;
-
-  updateHUD();
-  updatePointUI();
-}
-function spawnTeams(){
-  playerActor={
-    id:nextId++, team:'blue', isPlayer:true,
-    hp:CFG.player.hp, alive:true, downed:false, bleed:0,
-    inv:{frag:1,smoke:1,molotov:1,medkit:0,plate:0}
-  };
-  actors.push(playerActor);
-
-  for(let i=0;i<CFG.bots.teamCount-1;i++) spawnBot('blue',new THREE.Vector3(-35+Math.random()*20,0,-8+Math.random()*16));
-  for(let i=0;i<CFG.bots.teamCount;i++) spawnBot('red',new THREE.Vector3(35+Math.random()*20,0,-8+Math.random()*16));
-}
-function spawnBot(team,near=null){
-  const model=createSoldier(team);
-  const p=near?near.clone():new THREE.Vector3((Math.random()-.5)*(CFG.mapSize-80),0,(Math.random()-.5)*(CFG.mapSize-80));
-  model.position.set(p.x,0,p.z);
-  scene.add(model);
-
-  actors.push({
-    id:nextId++,team,isPlayer:false,hp:CFG.bots.hp,alive:true,downed:false,bleed:0,reviveProg:0,
-    model,fireCD:Math.random()*.2,thinkCD:Math.random()*.2,throwCD:0,lastYaw:0,
-    inv:{frag:1,smoke:1,molotov:1,medkit:0,plate:0}
-  });
-}
-
-/* ---------- Input ---------- */
-function onKeyDown(e){
-  switch(e.code){
-    case 'KeyW':move.w=true;break;
-    case 'KeyA':move.a=true;break;
-    case 'KeyS':move.s=true;break;
-    case 'KeyD':move.d=true;break;
-    case 'ShiftLeft':state.isSprinting=true;break;
-    case 'AltLeft':
-    case 'AltRight':state.isTacticalWalk=true;break;
-    case 'ControlLeft':tryStartSlide();break;
-    case 'KeyC':setCrouch(true);break;
-    case 'KeyR':reload();break;
-
-    case 'KeyE':move.eHold=true;break;
-
-    case 'KeyB':
-      state.fireMode = state.fireMode==='auto' ? 'semi' : 'auto';
-      announce(`开火模式：${state.fireMode==='auto'?'全自动':'半自动'}`);
-      break;
-
-    case 'Digit6':
-      useMedkit();
-      break;
-    case 'Digit7':
-      usePlate();
-      break;
-    case 'KeyX':
-      useUAV();
-      break;
-    case 'KeyZ':
-      placePing();
-      break;
-
-    // 按住预瞄，松开投掷
-    case 'KeyF':
-      if(state.playing && playerActor?.inv.frag>0 && state.throwCD<=0) state.throwAimType='frag';
-      break;
-    case 'KeyG':
-      if(state.playing && playerActor?.inv.smoke>0 && state.throwCD<=0) state.throwAimType='smoke';
-      break;
-    case 'KeyV':
-      if(state.playing && playerActor?.inv.molotov>0 && state.throwCD<=0) state.throwAimType='molotov';
-      break;
-
-    case 'Space':
-      if(!state.playing) return;
-      if(state.canJump){ velocity.y=CFG.player.jump; state.canJump=false; }
-      else tryMantle();
-      break;
-  }
-}
-function onKeyUp(e){
-  switch(e.code){
-    case 'KeyW':move.w=false;break;
-    case 'KeyA':move.a=false;break;
-    case 'KeyS':move.s=false;break;
-    case 'KeyD':move.d=false;break;
-    case 'ShiftLeft':state.isSprinting=false;break;
-    case 'AltLeft':
-    case 'AltRight':state.isTacticalWalk=false;break;
-    case 'KeyC':setCrouch(false);break;
-    case 'KeyE':
-      move.eHold=false;
-      state.reviveProgress=0;
-      break;
-
-    case 'KeyF':
-      if(state.throwAimType==='frag'){ playerThrow('frag'); state.throwAimType=null; }
-      break;
-    case 'KeyG':
-      if(state.throwAimType==='smoke'){ playerThrow('smoke'); state.throwAimType=null; }
-      break;
-    case 'KeyV':
-      if(state.throwAimType==='molotov'){ playerThrow('molotov'); state.throwAimType=null; }
-      break;
-  }
-}
-function onMouseDown(e){
-  if(!state.playing) return;
-  if(e.button===0){
-    if(state.fireMode==='auto') state.firing=true;
-    else if(state.fireCD<=0) playerShoot();
-  }
-  if(e.button===2) state.isScoped=true;
-}
-function onMouseUp(e){
-  if(e.button===0) state.firing=false;
-  if(e.button===2) state.isScoped=false;
-}
-
-/* ---------- Additional features ---------- */
-function tryStartSlide(){
-  if(!state.playing || state.slideActive || state.isCrouching || state.respawning) return;
-  const moving = move.w || move.a || move.s || move.d;
-  if(!moving || !state.isSprinting || state.stamina < 20) return;
-
-  state.slideActive=true;
-  state.slideT=0.45;
-  const d=getViewDir(); d.y=0; d.normalize();
-  state.slideDir.copy(d);
-  state.stamina=Math.max(0,state.stamina-18);
-  state.isCrouching=true;
-}
-function useMedkit(){
-  if(!playerActor || playerActor.inv.medkit<=0 || state.respawning) return;
-  if(state.hp>=CFG.player.hp) return;
-  playerActor.inv.medkit--;
-  state.hp=Math.min(CFG.player.hp, state.hp+35);
-  playerActor.hp=state.hp;
-  announce('使用医疗包 +35 生命');
-}
-function usePlate(){
-  if(!playerActor || playerActor.inv.plate<=0 || state.respawning) return;
-  if(state.armor>=CFG.player.armorMax) return;
-  playerActor.inv.plate--;
-  state.armor=Math.min(CFG.player.armorMax, state.armor+25);
-  announce('使用护甲板 +25 护甲');
-}
-function useUAV(){
-  if(state.uavCharges<=0 || state.respawning) return;
-  state.uavCharges--;
-  state.uavTime=8;
-  announce('UAV 启动：8秒敌情扫描');
-}
-function placePing(){
-  if(!state.playing) return;
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-  raycaster.far = 220;
-
-  const intersects = raycaster.intersectObjects(scene.children, true);
-  const valid = intersects.find(i => i.object.parent !== camera && i.object !== throwPreviewLine);
-  if(!valid) return;
-
-  if(pingMarker) scene.remove(pingMarker.mesh);
-  const mesh = new THREE.Mesh(
-    new THREE.ConeGeometry(0.45,1.2,8),
-    new THREE.MeshBasicMaterial({color:0x00ffcc})
-  );
-  mesh.position.copy(valid.point).add(new THREE.Vector3(0,0.9,0));
-  scene.add(mesh);
-  pingMarker={mesh,pos:valid.point.clone(),life:12};
-  announce('已标记目标点');
-}
-function announce(text){
-  const el=document.getElementById('announce');
-  el.innerText=text;
-  el.style.opacity='1';
-  clearTimeout(el._t);
-  el._t=setTimeout(()=>el.style.opacity='0',1400);
-}
-
-/* ---------- Move / collision / unstuck ---------- */
-function setCrouch(v){
-  if(v){state.isCrouching=true;return;}
-  if(canStand()) state.isCrouching=false;
-}
-function canStand(){
-  const x=camera.position.x,z=camera.position.z;
-  _box.min.set(x-CFG.player.r,0,z-CFG.player.r);
-  _box.max.set(x+CFG.player.r,CFG.player.standH,z+CFG.player.r);
-  for(const b of wallBoxes) if(_box.intersectsBox(b)) return false;
-  return true;
-}
-function tryMantle(){
-  if(mantle.active) return;
-  const f=getViewDir(); f.y=0;
-  if(f.lengthSq()<.001) return;
-  f.normalize();
-
-  const front=new THREE.Vector3(camera.position.x+f.x*1.05,0,camera.position.z+f.z*1.05);
-  let hit=null;
-  for(const b of obstacles){
-    if(front.x>b.min.x&&front.x<b.max.x&&front.z>b.min.z&&front.z<b.max.z){
-      if(b.max.y>.7&&b.max.y<1.9){hit=b;break;}
-    }
-  }
-  if(!hit) return;
-
-  mantle.active=true; mantle.t=0;
-  mantle.from.copy(camera.position);
-  mantle.to.set(camera.position.x+f.x*1.35, hit.max.y+(state.isCrouching?CFG.player.crouchEye:CFG.player.standEye), camera.position.z+f.z*1.35);
-  velocity.set(0,0,0);
-}
-function checkPlayerColAt(x,z,h){
-  const r=CFG.player.r;
-  _box.min.set(x-r,0,z-r);
-  _box.max.set(x+r,h,z+r);
-  for(const b of wallBoxes) if(_box.intersectsBox(b)) return true;
-  return false;
-}
-function checkPlayerCol(){ return checkPlayerColAt(camera.position.x,camera.position.z,playerHeight); }
-
-function resolvePlayerStuck(){
-  for(let iter=0; iter<5; iter++){
-    const r=CFG.player.r;
-    _box.min.set(camera.position.x-r,0,camera.position.z-r);
-    _box.max.set(camera.position.x+r,playerHeight,camera.position.z+r);
-
-    let hit=null;
-    for(const b of wallBoxes){ if(_box.intersectsBox(b)){ hit=b; break; } }
-    if(!hit) return;
-
-    const pushLeft  = _box.max.x - hit.min.x;
-    const pushRight = hit.max.x - _box.min.x;
-    const pushBack  = _box.max.z - hit.min.z;
-    const pushFront = hit.max.z - _box.min.z;
-
-    const minPen = Math.min(pushLeft,pushRight,pushBack,pushFront);
-    const eps=0.02;
-
-    if(minPen===pushLeft) camera.position.x -= (pushLeft+eps);
-    else if(minPen===pushRight) camera.position.x += (pushRight+eps);
-    else if(minPen===pushBack) camera.position.z -= (pushBack+eps);
-    else camera.position.z += (pushFront+eps);
-  }
-
-  // emergency unstuck
-  const base=camera.position.clone();
-  for(let rr=1; rr<=8; rr++){
-    for(let i=0;i<12;i++){
-      const ang=(i/12)*Math.PI*2;
-      const nx=base.x+Math.cos(ang)*rr, nz=base.z+Math.sin(ang)*rr;
-      if(!checkPlayerColAt(nx,nz,playerHeight)){ camera.position.x=nx; camera.position.z=nz; return; }
-    }
-  }
-}
-
-/* ---------- Weapon ---------- */
-function reload(){
-  if(state.reloading || state.ammo===CFG.weapon.mag) return;
-  state.reloading=true;
-  playSound('reload');
-  document.getElementById('ammo-cur').innerText='...';
-  setTimeout(()=>{ state.ammo=CFG.weapon.mag; state.reloading=false; },CFG.weapon.reload*1000);
-}
-function playerShoot(){
-  if(state.reloading) return;
-  if(state.ammo<=0){reload();return;}
-
-  state.ammo--;
-  state.fireCD=CFG.weapon.fireInt;
-  playSound('shoot');
-
-  muzzleFlash.material.opacity=1;
-  muzzleFlash.rotation.z=Math.random()*Math.PI*2;
-
-  const i=state.recoilShot;
-  const pitchKick=CFG.recoil.camPitchBase + Math.min(i*CFG.recoil.camPitchGrow,0.011);
-  const yawKick=((i%2===0)?1:-1)*(CFG.recoil.camYaw + i*0.00006);
-  camera.rotation.x-=pitchKick;
-  camera.rotation.y+=yawKick;
-  state.recoilPitch+=pitchKick;
-  state.recoilYaw+=yawKick;
-  state.recoilShot=Math.min(i+1,40);
-
-  const origin=camera.position.clone().add(new THREE.Vector3(0,-0.04,0));
-  const dir=getViewDir();
-  const spread=state.isScoped?0.0025:0.008;
-  dir.x+=(Math.random()-.5)*spread;
-  dir.y+=(Math.random()-.5)*spread;
-  dir.z+=(Math.random()-.5)*spread;
-  dir.normalize();
-
-  hitscan(origin,dir,'blue',playerActor.id,CFG.weapon.damage,true);
-}
-function botShoot(bot,targetPos,targetActor){
-  bot.fireCD=rand(CFG.bots.fireMin,CFG.bots.fireMax);
-
-  if(targetActor?.isPlayer && Math.random()<CFG.bots.missVsPlayer) return;
-  if(isInSmoke(bot.model.position)) return;
-
-  const origin=bot.model.position.clone().add(new THREE.Vector3(0,1.45,0));
-  const dir=targetPos.clone().sub(origin).normalize();
-  const spread=targetActor?.isPlayer?0.045:0.028;
-  dir.x+=(Math.random()-.5)*spread;
-  dir.y+=(Math.random()-.5)*spread*0.7;
-  dir.z+=(Math.random()-.5)*spread;
-  dir.normalize();
-
-  hitscan(origin,dir,bot.team,bot.id,CFG.weapon.damage,false);
-}
-function hitscan(origin,dir,team,ownerId,baseDamage,fromPlayer){
-  let maxDist=CFG.weapon.maxRange;
-
-  _ray.origin.copy(origin);
-  _ray.direction.copy(dir);
-  for(const b of wallBoxes){
-    const h=_ray.intersectBox(b,_v3);
-    if(h){
-      const d=h.distanceTo(origin);
-      if(d<maxDist) maxDist=d;
-    }
-  }
-
-  let bestActor=null,bestDist=maxDist+1,bestHead=false;
-  for(const a of actors){
-    if(!a.alive || a.downed || a.team===team || a.id===ownerId) continue;
-    const base=getActorPos(a);
-
-    const bodyC=new THREE.Vector3(base.x, a.isPlayer?camera.position.y-0.15:1.2, base.z);
-    const headC=new THREE.Vector3(base.x, a.isPlayer?camera.position.y+0.30:1.95, base.z);
-
-    const bodyD=raySphereDist(origin,dir,bodyC,0.48);
-    const headD=raySphereDist(origin,dir,headC,0.24);
-
-    if(headD<bestDist && headD<=maxDist){bestDist=headD;bestActor=a;bestHead=true;}
-    if(bodyD<bestDist && bodyD<=maxDist){bestDist=bodyD;bestActor=a;bestHead=false;}
-  }
-
-  if(bestActor){
-    const dmg=bestHead?baseDamage*CFG.weapon.headMult:baseDamage;
-    applyDamage(bestActor,dmg,bestHead,ownerId);
-    if(fromPlayer) showHitMarker(bestHead);
-  }
-}
-function raySphereDist(ro,rd,center,r){
-  const oc=_v3.copy(ro).sub(center);
-  const b=2*oc.dot(rd);
-  const c=oc.lengthSq()-r*r;
-  const disc=b*b-4*c;
-  if(disc<0) return Infinity;
-  const s=Math.sqrt(disc);
-  const t1=(-b-s)/2, t2=(-b+s)/2;
-  if(t1>0) return t1;
-  if(t2>0) return t2;
-  return Infinity;
-}
-
-/* ---------- Throwables + preview ---------- */
-function playerThrow(type){
-  if(state.throwCD>0 || state.respawning) return;
-  if(playerActor.inv[type]<=0) return;
-
-  playerActor.inv[type]--;
-  state.throwCD=CFG.throwables.cd;
-
-  const conf=CFG.throwables[type];
-  const origin=camera.position.clone().add(new THREE.Vector3(0,-.06,0));
-  const dir=getViewDir();
-
-  spawnThrowable(type,playerActor,origin,dir,conf.speed,conf.up);
-}
-function aiTryThrow(bot,target){
-  if(bot.throwCD>0 || bot.downed) return;
-
-  const d=getActorPos(target).distanceTo(bot.model.position);
-  if(bot.hp<40 && bot.inv.smoke>0 && Math.random()<0.45){
-    bot.inv.smoke--; bot.throwCD=3.2;
-    spawnThrowable('smoke',bot,bot.model.position.clone().add(new THREE.Vector3(0,1.35,0)),forwardFromYaw(bot.model.rotation.y),11,6);
-    return;
-  }
-  if(d>10 && d<24 && bot.inv.frag>0 && Math.random()<0.25){
-    bot.inv.frag--; bot.throwCD=3.7;
-    const dir=getActorPos(target).clone().sub(bot.model.position).setY(0).normalize();
-    spawnThrowable('frag',bot,bot.model.position.clone().add(new THREE.Vector3(0,1.35,0)),dir,11,6);
-    return;
-  }
-  if(d<16 && bot.inv.molotov>0 && Math.random()<0.22){
-    bot.inv.molotov--; bot.throwCD=4.0;
-    const dir=getActorPos(target).clone().sub(bot.model.position).setY(0).normalize();
-    spawnThrowable('molotov',bot,bot.model.position.clone().add(new THREE.Vector3(0,1.35,0)),dir,10.8,5.8);
-  }
-}
-function spawnThrowable(type,owner,origin,dir,speed,up){
-  const col=type==='frag'?0x556b2f:type==='smoke'?0x555555:0xaa3300;
-  const mesh=new THREE.Mesh(new THREE.SphereGeometry(.11,8,8),new THREE.MeshStandardMaterial({color:col}));
-  mesh.position.copy(origin);
-  scene.add(mesh);
-
-  const vel=dir.clone().normalize().multiplyScalar(speed);
-  vel.y=up;
-  grenades.push({type,mesh,pos:origin.clone(),vel,fuse:CFG.throwables[type].fuse,owner:owner.id});
-}
-function updateThrowables(dt){
-  for(let i=grenades.length-1;i>=0;i--){
-    const g=grenades[i];
-    g.fuse-=dt;
-    g.vel.y-=18*dt;
-    g.pos.addScaledVector(g.vel,dt);
-
-    if(g.pos.y<0.12){
-      g.pos.y=0.12;
-      g.vel.y*=-0.45;
-      g.vel.x*=0.72; g.vel.z*=0.72;
-      if(g.type==='molotov' && g.fuse>0.12) g.fuse=0.12;
+    <canvas id="simCanvas"></canvas>
+
+<script>
+    /** 
+     * 极致物理引擎 (包含慢镜头、时停、受力线及长效渐变尾迹)
+     */
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height;
+    let charges = [];        
+    let testParticles = [];  
+    
+    let isDragging = false;
+    let draggedCharge = null;
+    let probeEnabled = false;
+    let mouseX = 0, mouseY = 0;
+
+    // 动力学控制变量
+    let simSpeed = 1.0;
+    let isPaused = false;
+    let showForceVector = false;
+
+    const K = 300000;  // 模拟静电力常量
+    
+    // UI 面板折叠系统
+    function togglePanel(side) {
+        if(side === 'left') {
+            const p = document.getElementById('left-panel');
+            const t = document.getElementById('left-toggle');
+            p.classList.toggle('collapsed');
+            t.classList.toggle('collapsed');
+            t.innerHTML = p.classList.contains('collapsed') ? '❯' : '❮';
+        } else {
+            const p = document.getElementById('right-panel');
+            const t = document.getElementById('right-toggle');
+            const q = document.getElementById('quiz-btn');
+            p.classList.toggle('collapsed');
+            t.classList.toggle('collapsed');
+            q.classList.toggle('collapsed'); 
+            t.innerHTML = p.classList.contains('collapsed') ? '❮' : '❯';
+        }
     }
 
-    g.mesh.position.copy(g.pos);
-    if(g.fuse<=0){
-      explodeThrowable(g);
-      grenades.splice(i,1);
-    }
-  }
-
-  for(let i=smokeClouds.length-1;i>=0;i--){
-    const s=smokeClouds[i];
-    s.life-=dt;
-    const t=1-s.life/s.max;
-    s.r=Math.min(CFG.throwables.smoke.radius,1+t*7.5);
-    s.mesh.scale.setScalar(s.r);
-    s.mesh.material.opacity=Math.max(0.1,0.42*(s.life/s.max));
-    if(s.life<=0){scene.remove(s.mesh); smokeClouds.splice(i,1);}
-  }
-
-  for(let i=fireZones.length-1;i>=0;i--){
-    const f=fireZones[i];
-    f.life-=dt; f.tick+=dt;
-    f.mesh.scale.set(f.r,1,f.r);
-    f.mesh.material.opacity=0.34+Math.sin(performance.now()*0.02)*0.08;
-
-    if(f.tick>=0.25){
-      f.tick=0;
-      for(const a of actors){
-        if(!a.alive || a.downed) continue;
-        const p=getActorPos(a);
-        const d=Math.hypot(p.x-f.pos.x,p.z-f.pos.z);
-        if(d<f.r) applyDamage(a,f.dps*0.25,false,f.owner);
-      }
-    }
-    if(f.life<=0){scene.remove(f.mesh); fireZones.splice(i,1);}
-  }
-
-  if(pingMarker){
-    pingMarker.life-=dt;
-    pingMarker.mesh.rotation.y += dt*2;
-    if(pingMarker.life<=0){
-      scene.remove(pingMarker.mesh);
-      pingMarker=null;
-    }
-  }
-}
-function explodeThrowable(g){
-  scene.remove(g.mesh);
-  if(g.type==='frag'){
-    explosionFlash(g.pos,0xffaa66);
-    radialDamage(g.pos,CFG.throwables.frag.radius,CFG.throwables.frag.damage,g.owner);
-  }else if(g.type==='smoke'){
-    const m=new THREE.Mesh(
-      new THREE.SphereGeometry(1.2,14,12),
-      new THREE.MeshBasicMaterial({color:0x9ea4ab,transparent:true,opacity:.4,depthWrite:false})
-    );
-    m.position.copy(g.pos).setY(1.4);
-    scene.add(m);
-    smokeClouds.push({mesh:m,pos:m.position.clone(),r:1,life:CFG.throwables.smoke.duration,max:CFG.throwables.smoke.duration});
-  }else{
-    explosionFlash(g.pos,0xff5533);
-    const fm=new THREE.Mesh(
-      new THREE.CylinderGeometry(.5,.8,.12,14),
-      new THREE.MeshBasicMaterial({color:0xff6a00,transparent:true,opacity:.45})
-    );
-    fm.position.copy(g.pos).setY(.08);
-    scene.add(fm);
-    fireZones.push({
-      mesh:fm,pos:new THREE.Vector3(g.pos.x,0,g.pos.z),
-      r:CFG.throwables.molotov.radius,life:CFG.throwables.molotov.duration,dps:CFG.throwables.molotov.dps,tick:0,owner:g.owner
-    });
-  }
-}
-function explosionFlash(pos,color){
-  const light=new THREE.PointLight(color,2.2,14);
-  light.position.copy(pos).add(new THREE.Vector3(0,1,0));
-  scene.add(light);
-  setTimeout(()=>scene.remove(light),80);
-}
-function radialDamage(center,radius,maxDmg,owner){
-  for(const a of actors){
-    if(!a.alive || a.downed) continue;
-    const p=getActorPos(a).clone(); p.y+=1;
-    const d=p.distanceTo(center);
-    if(d<=radius){
-      const dmg=maxDmg*(1-d/radius);
-      applyDamage(a,dmg,false,owner);
-    }
-  }
-}
-function updateThrowPreview(){
-  if(!state.throwAimType || !state.playing || state.respawning){
-    throwPreviewLine.visible=false;
-    return;
-  }
-  const conf=CFG.throwables[state.throwAimType];
-  const origin=camera.position.clone().add(new THREE.Vector3(0,-0.06,0));
-  const dir=getViewDir();
-
-  const pts=[];
-  let p=origin.clone();
-  let v=dir.clone().multiplyScalar(conf.speed);
-  v.y=conf.up;
-
-  const step=0.06;
-  for(let i=0;i<28;i++){
-    pts.push(p.clone());
-    v.y-=18*step;
-    p.addScaledVector(v,step);
-    if(p.y<0.12){ p.y=0.12; pts.push(p.clone()); break; }
-  }
-
-  throwPreviewGeom.setFromPoints(pts);
-  throwPreviewLine.visible=true;
-}
-
-/* ---------- Loot ---------- */
-function spawnLootDrop(pos){
-  const r=Math.random();
-  let type='ammo';
-  if(r<0.24) type='ammo';
-  else if(r<0.45) type='armor';
-  else if(r<0.62) type='throw';
-  else if(r<0.81) type='medkit';
-  else type='plate';
-
-  const color = type==='ammo'?0xffdd55 : type==='armor'?0x55aaff : type==='throw'?0x55ff88 : type==='medkit'?0xff7777 : 0x99ccff;
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(.45,.45,.45), new THREE.MeshStandardMaterial({color}));
-  mesh.position.copy(pos).setY(0.25);
-  scene.add(mesh);
-  lootDrops.push({type,mesh,pos:mesh.position.clone(),life:20});
-}
-function updateLoot(dt){
-  for(let i=lootDrops.length-1;i>=0;i--){
-    const l=lootDrops[i];
-    l.life-=dt;
-    l.mesh.rotation.y+=dt*1.2;
-
-    if(camera.position.distanceTo(l.pos)<1.8){
-      if(l.type==='ammo'){
-        state.ammo=Math.min(CFG.weapon.mag, state.ammo+15);
-        announce('拾取：弹药 +15');
-      }else if(l.type==='armor'){
-        state.armor=Math.min(CFG.player.armorMax, state.armor+20);
-        announce('拾取：护甲 +20');
-      }else if(l.type==='throw'){
-        const arr=['frag','smoke','molotov'];
-        const t=arr[Math.floor(Math.random()*arr.length)];
-        playerActor.inv[t]=Math.min(2,playerActor.inv[t]+1);
-        announce(`拾取：${t==='frag'?'手雷':t==='smoke'?'烟雾':'燃烧瓶'} +1`);
-      }else if(l.type==='medkit'){
-        playerActor.inv.medkit=Math.min(2,playerActor.inv.medkit+1);
-        announce('拾取：医疗包 +1');
-      }else if(l.type==='plate'){
-        playerActor.inv.plate=Math.min(2,playerActor.inv.plate+1);
-        announce('拾取：护甲板 +1');
-      }
-
-      scene.remove(l.mesh);
-      lootDrops.splice(i,1);
-      continue;
+    // 速度与播放控制
+    function updateSpeed(val) {
+        simSpeed = parseFloat(val);
+        document.getElementById('speed-val').innerText = simSpeed.toFixed(1) + 'x';
     }
 
-    if(l.life<=0){
-      scene.remove(l.mesh);
-      lootDrops.splice(i,1);
-    }
-  }
-}
-
-/* ---------- Update Loop ---------- */
-function animate(){
-  requestAnimationFrame(animate);
-  const now=performance.now();
-  const dt=Math.min((now-state.last)/1000,0.033);
-  state.last=now;
-
-  frameCount++;
-  fpsAcc+=dt; fpsFrames++;
-  if(fpsAcc>=1){
-    const fpsNow=fpsFrames/fpsAcc;
-    state.fps=fpsNow;
-    if(fpsNow<52) dynamicPixelRatio=Math.max(CFG.perf.minPixelRatio,dynamicPixelRatio-0.05);
-    if(fpsNow>66) dynamicPixelRatio=Math.min(CFG.perf.maxPixelRatio,dynamicPixelRatio+0.03);
-    renderer.setPixelRatio(dynamicPixelRatio);
-    fpsAcc=0; fpsFrames=0;
-  }
-  renderer.shadowMap.needsUpdate=(frameCount % CFG.perf.shadowUpdateInterval===0);
-
-  if(state.playing){
-    state.throwCD=Math.max(0,state.throwCD-dt);
-    state.uavTime=Math.max(0,state.uavTime-dt);
-
-    updatePlayer(dt);
-    updateBots(dt);
-    updateThrowables(dt);
-    updateLoot(dt);
-    updatePoints(dt);
-    updateRevive(dt);
-    updateThrowPreview();
-
-    updateFPGun();
-    updateSmokeVision();
-
-    if(muzzleFlash.material.opacity>0) muzzleFlash.material.opacity-=dt*20;
-
-    state._uiTimer+=dt;
-    if(state._uiTimer>=1/CFG.perf.uiHz){
-      state._uiTimer=0;
-      updateHUD();
+    function togglePause() {
+        isPaused = !isPaused;
+        const btn = document.getElementById('btn-pause');
+        if(isPaused) {
+            btn.innerHTML = '▶️ 继续播放 (恢复时间流速)';
+            btn.style.background = 'rgba(168, 85, 247, 0.2)';
+        } else {
+            btn.innerHTML = '⏸️ 暂停画面 (此时可详细分析轨迹)';
+            btn.style.background = '';
+        }
     }
 
-    state._mmTimer+=dt;
-    if(state._mmTimer>=1/CFG.perf.minimapHz){
-      state._mmTimer=0;
-      updateMinimap();
-    }
-  }else{
-    throwPreviewLine.visible=false;
-    reviveTip.style.display='none';
-  }
-
-  renderer.render(scene,camera);
-}
-
-function updatePlayer(dt){
-  if(!Number.isFinite(camera.position.x)||!Number.isFinite(camera.position.y)||!Number.isFinite(camera.position.z)){
-    camera.position.set(0,CFG.player.standEye,0);
-    velocity.set(0,0,0);
-  }
-
-  const rec=CFG.recoil.recover*dt;
-  const rp=Math.min(state.recoilPitch,rec);
-  const ry=Math.min(Math.abs(state.recoilYaw),rec)*(state.recoilYaw>0?1:-1);
-  camera.rotation.x+=rp;
-  camera.rotation.y-=ry;
-  state.recoilPitch-=rp;
-  state.recoilYaw-=ry;
-  if(!state.firing) state.recoilShot=Math.max(0,state.recoilShot-30*dt);
-
-  playerHeight=THREE.MathUtils.lerp(playerHeight,state.isCrouching?CFG.player.crouchH:CFG.player.standH,dt*10);
-  eyeTarget=THREE.MathUtils.lerp(eyeTarget,state.isCrouching?CFG.player.crouchEye:CFG.player.standEye,dt*10);
-
-  if(mantle.active){
-    mantle.t+=dt/mantle.dur;
-    if(mantle.t>=1){mantle.t=1;mantle.active=false;state.canJump=false;}
-    const k=1-Math.pow(1-mantle.t,3);
-    camera.position.lerpVectors(mantle.from,mantle.to,k);
-    return;
-  }
-
-  if(state.slideActive){
-    state.slideT -= dt;
-    controls.moveForward(CFG.player.sprint * dt * 2.4);
-    if(checkPlayerCol()) controls.moveForward(-CFG.player.sprint * dt * 2.4);
-    if(state.slideT<=0){
-      state.slideActive=false;
-      if(canStand()) state.isCrouching=false;
-    }
-  }
-
-  if(controls.isLocked){
-    velocity.x-=velocity.x*10*dt;
-    velocity.z-=velocity.z*10*dt;
-    velocity.y-=CFG.player.gravity*dt;
-
-    let sp=state.isCrouching?CFG.player.crouch:(state.isSprinting&&!state.isScoped?CFG.player.sprint:CFG.player.walk);
-    if(state.isTacticalWalk) sp*=0.55;
-
-    const moving=(move.w||move.a||move.s||move.d);
-    if(state.isSprinting && moving && !state.isCrouching){
-      state.stamina=Math.max(0,state.stamina-24*dt);
-      if(state.stamina<=0) state.isSprinting=false;
-    }else{
-      state.stamina=Math.min(100,state.stamina+18*dt);
-    }
-    if(state.isSprinting){
-      const factor=0.55+0.45*(state.stamina/100);
-      sp*=factor;
+    function toggleForceVector() {
+        showForceVector = document.getElementById('t-force').checked;
     }
 
-    const zin=(move.w?1:0)-(move.s?1:0);
-    const xin=(move.d?1:0)-(move.a?1:0);
-    velocity.z-=zin*sp*100*dt;
-    velocity.x-=xin*sp*100*dt;
+    // Canvas 高DPI适配函数
+    function setupCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr);
+        
+        document.getElementById('inp-x').value = Math.round(width / 2);
+        document.getElementById('inp-y').value = Math.round(height / 2 - 150);
+    }
+    window.addEventListener('resize', setupCanvas);
 
-    controls.moveRight(-velocity.x*dt);
-    if(checkPlayerCol()){controls.moveRight(velocity.x*dt);velocity.x=0;}
+    class SourceCharge {
+        constructor(x, y, sign, qMult = 2.0) {
+            this.x = x; this.y = y; this.sign = sign; 
+            this.Q = sign * qMult; 
+            this.radius = 16; 
+        }
+        draw(ctx) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI * 2);
+            ctx.fillStyle = this.sign > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(14,165,233,0.2)';
+            ctx.fill();
 
-    controls.moveForward(-velocity.z*dt);
-    if(checkPlayerCol()){controls.moveForward(velocity.z*dt);velocity.z=0;}
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.sign > 0 ? '#dc2626' : '#0284c7';
+            ctx.fill();
+            
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = this.sign > 0 ? '#fca5a5' : '#7dd3fc';
+            ctx.stroke();
 
-    camera.position.y+=velocity.y*dt;
-    if(camera.position.y<eyeTarget){camera.position.y=eyeTarget;velocity.y=0;state.canJump=true;}
-    if(camera.position.y<-18){camera.position.set(0,CFG.player.standEye,0);velocity.set(0,0,0);}
-  }
-
-  resolvePlayerStuck();
-
-  state.fireCD-=dt;
-  if(state.firing && state.fireCD<=0) playerShoot();
-}
-
-function updateBots(dt){
-  for(const b of actors){
-    if(!b.alive || b.isPlayer) continue;
-
-    if(b.downed){
-      b.bleed-=dt;
-      if(b.bleed<=0) forceKillBot(b);
-      continue;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 22px "Segoe UI", Arial'; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.sign > 0 ? '+' : '−', this.x, this.y + 1);
+        }
     }
 
-    // 蓝队AI尝试救援倒地蓝队
-    if(b.team==='blue'){
-      const mate = actors.find(a=>a.alive && a.team==='blue' && a.downed && !a.isPlayer);
-      if(mate){
-        const d = b.model.position.distanceTo(mate.model.position);
-        if(d<6){
-          b.model.lookAt(mate.model.position.x,1,mate.model.position.z);
-          if(d>1.6){
-            const dir=mate.model.position.clone().sub(b.model.position).setY(0).normalize();
-            b.model.position.addScaledVector(dir, dt*2.4);
-          }else{
-            mate.reviveProg = (mate.reviveProg||0) + dt*0.4;
-            if(mate.reviveProg>=1){
-              mate.downed=false; mate.hp=45; mate.bleed=0; mate.reviveProg=0;
-              announce('队友已被AI救起');
+    class TestParticle {
+        constructor(x, y, sign) {
+            this.x = x; this.y = y;
+            this.vx = (Math.random() - 0.5) * 4; 
+            this.vy = (Math.random() - 0.5) * 4;
+            this.q = sign * 0.1; 
+            this.m = 1.0;        
+            this.history = [];   
+            this.isAlive = true;
+            this.Fx = 0; 
+            this.Fy = 0;
+        }
+        update(dt) {
+            if (!this.isAlive) return;
+            
+            let field = calculateE(this.x, this.y);
+            this.Fx = this.q * field.Ex;
+            this.Fy = this.q * field.Ey;
+            
+            // 暂停逻辑：如果不更新速度和位置，则呈现时间停止
+            if(isPaused) return;
+
+            let ax = this.Fx / this.m;
+            let ay = this.Fy / this.m;
+
+            // 应用用户控制的速度系数
+            let timeStep = dt * simSpeed;
+
+            this.vx += ax * timeStep;
+            this.vy += ay * timeStep;
+            
+            // 空气微小阻尼
+            this.vx *= 0.985; 
+            this.vy *= 0.985;
+
+            this.x += this.vx * timeStep;
+            this.y += this.vy * timeStep;
+
+            // 存入历史轨迹 (大幅增加长度以供详细观测)
+            this.history.push({x: this.x, y: this.y});
+            if (this.history.length > 800) this.history.shift(); 
+
+            // 碰撞检测
+            for (let c of charges) {
+                let dx = this.x - c.x, dy = this.y - c.y;
+                if (dx*dx + dy*dy < c.radius * c.radius) this.isAlive = false;
             }
-          }
+            if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.isAlive = false;
         }
-      }
-    }
+        draw(ctx) {
+            // 1. 绘制带有渐变透明度的超长高级尾迹
+            if (this.history.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(this.history[0].x, this.history[0].y);
+                for(let i = 1; i < this.history.length; i++){
+                    ctx.lineTo(this.history[i].x, this.history[i].y);
+                }
+                ctx.strokeStyle = this.q > 0 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(14, 165, 233, 0.7)';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
 
-    b.fireCD-=dt; b.thinkCD-=dt; b.throwCD-=dt;
+            // 2. 绘制高亮白点 (粒子本体)
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 4.5, 0, Math.PI*2);
+            ctx.fillStyle = '#fff'; ctx.fill();
 
-    const target=chooseTargetForBot(b);
-    if(!target) continue;
+            // 3. 极客功能：手动开启受力矢量箭头 (F)
+            if (showForceVector) {
+                let fMag = Math.sqrt(this.Fx * this.Fx + this.Fy * this.Fy);
+                if (fMag > 0.001) { // 规避奇异小受力
+                    // 自适应长度缩放
+                    let displayLen = Math.min(Math.max(fMag * 15, 25), 90); 
+                    let dirX = this.Fx / fMag;
+                    let dirY = this.Fy / fMag;
+                    let endX = this.x + dirX * displayLen;
+                    let endY = this.y + dirY * displayLen;
 
-    if(b.thinkCD<=0){
-      b.thinkCD=CFG.bots.thinkInt;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(endX, endY);
+                    ctx.strokeStyle = '#facc15'; 
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
 
-      const pos=b.model.position;
-      const tpos=getAimPos(target);
+                    // 画箭头头部
+                    let angle = Math.atan2(dirY, dirX);
+                    ctx.beginPath();
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(endX - 8 * Math.cos(angle - Math.PI/6), endY - 8 * Math.sin(angle - Math.PI/6));
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(endX - 8 * Math.cos(angle + Math.PI/6), endY - 8 * Math.sin(angle + Math.PI/6));
+                    ctx.stroke();
 
-      b.model.lookAt(tpos.x,1.3,tpos.z);
-      b.lastYaw=b.model.rotation.y;
-
-      steerMove(pos,tpos,CFG.bots.speed*CFG.bots.thinkInt);
-
-      aiTryThrow(b,target);
-
-      const d=pos.distanceTo(tpos);
-      if(d<CFG.bots.sight && b.fireCD<=0 && hasLOS(pos.clone().add(new THREE.Vector3(0,1.45,0)),tpos)){
-        botShoot(b,tpos,target);
-      }
-    }
-
-    const parts=b.model.userData.parts;
-    const t=performance.now()*0.006;
-    parts.ll.rotation.x=Math.sin(t)*0.35;
-    parts.rl.rotation.x=-Math.sin(t)*0.35;
-    parts.la.rotation.x=-Math.sin(t)*0.2;
-    parts.ra.rotation.x=Math.sin(t)*0.2;
-  }
-}
-
-function chooseTargetForBot(bot){
-  const enemies=actors.filter(a=>a.alive && !a.downed && a.team!==bot.team && a.id!==bot.id);
-  if(!enemies.length) return null;
-
-  const visible = enemies.filter(a=>!isInSmoke(getActorPos(a)));
-  if(!visible.length) return null;
-
-  const player=visible.find(a=>a.isPlayer);
-  const enemyBots=visible.filter(a=>!a.isPlayer);
-
-  const preferPlayer=Math.random()<CFG.bots.focusPlayerProb;
-  const pool = (preferPlayer && player) ? [player] : (enemyBots.length?enemyBots:(player?[player]:[]));
-  if(!pool.length) return null;
-
-  let best=null,bestD=Infinity;
-  for(const a of pool){
-    const d=getActorPos(a).distanceTo(bot.model.position);
-    if(d<bestD){bestD=d;best=a;}
-  }
-  return best;
-}
-
-function steerMove(pos,target,step){
-  const to=target.clone().sub(pos); to.y=0;
-  if(to.lengthSq()<.001) return false;
-  to.normalize();
-
-  const dirs=[0,.6,-.6,1.1,-1.1];
-  let best=null,bestDist=1e9;
-  for(const a of dirs){
-    const d=to.clone().applyAxisAngle(_up,a);
-    const np=pos.clone().add(d.multiplyScalar(step));
-    if(botCollide(np)) continue;
-    const dist=np.distanceTo(target);
-    if(dist<bestDist){bestDist=dist;best=np;}
-  }
-  if(best){pos.copy(best); return true;}
-  return false;
-}
-function botCollide(p){
-  _box.min.set(p.x-.34,0,p.z-.34);
-  _box.max.set(p.x+.34,1.9,p.z+.34);
-  for(const b of wallBoxes) if(_box.intersectsBox(b)) return true;
-  return false;
-}
-
-/* ---------- Revive ---------- */
-function updateRevive(dt){
-  if(state.respawning){ reviveTip.style.display='none'; return; }
-
-  let nearest=null, nearestD=Infinity;
-  for(const a of actors){
-    if(!a.alive || a.isPlayer || a.team!=='blue' || !a.downed) continue;
-    const d=getActorPos(a).distanceTo(camera.position);
-    if(d<nearestD){nearestD=d; nearest=a;}
-  }
-  state.reviveTarget=nearest;
-
-  if(nearest && nearestD<=CFG.revive.dist){
-    reviveTip.style.display='block';
-    reviveTip.innerText=`按住 E 救援队友 (${Math.floor(state.reviveProgress*100)}%)`;
-    if(move.eHold){
-      state.reviveProgress=Math.min(1,state.reviveProgress+dt/CFG.revive.holdTime);
-      if(state.reviveProgress>=1){
-        nearest.downed=false;
-        nearest.hp=45;
-        nearest.bleed=0;
-        nearest.reviveProg=0;
-        state.reviveProgress=0;
-        state.reviveTarget=null;
-        state.armor=Math.min(CFG.player.armorMax,state.armor+10);
-        announce('成功救援队友！奖励：护甲 +10');
-      }
-    }else{
-      state.reviveProgress=Math.max(0,state.reviveProgress-dt*0.8);
-    }
-  }else{
-    state.reviveProgress=0;
-    reviveTip.style.display='none';
-  }
-}
-
-/* ---------- Points ---------- */
-function updatePoints(dt){
-  for(const p of points){
-    const inBlue=[], inRed=[];
-    for(const a of actors){
-      if(!a.alive || a.downed) continue;
-      if(getActorPos(a).distanceTo(p.pos)<=CFG.points.r){
-        (a.team==='blue'?inBlue:inRed).push(a);
-      }
-    }
-
-    if(inBlue.length && inRed.length){
-      // contested
-    }else if(inBlue.length || inRed.length){
-      const team=inBlue.length?'blue':'red';
-      const list=inBlue.length?inBlue:inRed;
-      const cap=nearestToPoint(list,p.pos);
-
-      if(p.owner===team && p.capturedBy && aliveById(p.capturedBy)){
-        p.captureTeam=null; p.prog=0;
-      }else{
-        if(p.captureTeam!==team){p.captureTeam=team;p.prog=0;}
-        p.prog+=dt/CFG.points.captureTime;
-        if(p.prog>=1){
-          p.owner=team;
-          p.capturedBy=cap?.id||null;
-          p.captureTeam=null;
-          p.prog=0;
+                    // 画文字 "F"
+                    ctx.fillStyle = '#facc15';
+                    ctx.font = 'italic 18px "Times New Roman"';
+                    ctx.fillText('F', endX + 12 * Math.cos(angle), endY + 12 * Math.sin(angle));
+                }
+            }
         }
-      }
-    }else{
-      p.captureTeam=null; p.prog=0;
     }
 
-    const col=p.owner==='blue'?0x4aa3ff:p.owner==='red'?0xff4a4a:0x9a9a9a;
-    p.mesh.material.color.setHex(col);
-    p.ring.material.color.setHex(col);
-  }
-
-  state.scoreTick+=dt;
-  if(state.scoreTick>=1){
-    state.scoreTick=0;
-    state.scoreBlue+=points.filter(p=>p.owner==='blue').length;
-    state.scoreRed +=points.filter(p=>p.owner==='red').length;
-    if(state.scoreBlue>=CFG.winScore || state.scoreRed>=CFG.winScore){
-      endMatch(state.scoreBlue>state.scoreRed?'蓝队胜利':'红队胜利');
-      return;
-    }
-  }
-  updatePointUI();
-}
-function updatePointUI(){
-  for(const p of points){
-    const panel=document.getElementById(`pp-${p.name}`);
-    const fill=document.getElementById(`ppf-${p.name}`);
-    if(!panel||!fill) continue;
-    if(p.owner==='blue'){
-      panel.style.borderColor='#4aa3ff'; fill.style.background='#4aa3ff'; fill.style.width='100%';
-    }else if(p.owner==='red'){
-      panel.style.borderColor='#ff4a4a'; fill.style.background='#ff4a4a'; fill.style.width='100%';
-    }else if(p.captureTeam){
-      panel.style.borderColor=p.captureTeam==='blue'?'#4aa3ff':'#ff4a4a';
-      fill.style.background=p.captureTeam==='blue'?'#4aa3ff':'#ff4a4a';
-      fill.style.width=(p.prog*100).toFixed(1)+'%';
-    }else{
-      panel.style.borderColor='#666'; fill.style.background='#888'; fill.style.width='0%';
-    }
-  }
-}
-
-/* ---------- Damage / death ---------- */
-function applyDamage(actor,dmg,isHead=false,ownerId=null){
-  const attacker=actors.find(a=>a.id===ownerId);
-
-  if(actor.isPlayer){
-    if(attacker && !attacker.isPlayer) dmg*=CFG.bots.damageToPlayerScale;
-    if(state.armor>0){
-      const absorb=Math.min(state.armor,dmg*0.5);
-      state.armor-=absorb;
-      dmg-=absorb;
-    }
-  }
-
-  actor.hp-=dmg;
-  if(actor.isPlayer){
-    state.hp=Math.max(0,actor.hp);
-    flashDamage();
-  }
-
-  if(actor.hp<=0) killActor(actor,ownerId,isHead);
-}
-
-function killActor(victim,ownerId,isHead){
-  // 蓝队AI先进入击倒态
-  if(!victim.isPlayer && victim.team==='blue' && !victim.downed){
-    victim.downed=true;
-    victim.hp=1;
-    victim.bleed=CFG.bots.downBleedout;
-    victim.reviveProg=0;
-    announce('队友被击倒！快去救援');
-    return;
-  }
-
-  victim.alive=false;
-  victim.downed=false;
-
-  for(const p of points){
-    if(p.capturedBy===victim.id){
-      p.owner=null; p.capturedBy=null; p.captureTeam=null; p.prog=0;
-    }
-  }
-
-  const killer=actors.find(a=>a.id===ownerId);
-  if(killer?.isPlayer){
-    state.myKills++;
-    showKillMsg(`你 击杀了 敌人${isHead?'（爆头）':''}`);
-
-    if(state.myKills % 5 === 0){
-      state.uavCharges++;
-      announce('连杀奖励：UAV +1');
-    }
-
-    spawnLootDrop(getActorPos(victim).clone());
-  }
-
-  if(victim.isPlayer){
-    controls.unlock();
-    state.respawning=true;
-    setTimeout(respawnPlayer,2300);
-  }else{
-    scene.remove(victim.model);
-    setTimeout(()=>{
-      const idx=actors.indexOf(victim);
-      if(idx>-1) actors.splice(idx,1);
-      if(state.playing) spawnBot(victim.team);
-    },1200);
-  }
-}
-function forceKillBot(bot){
-  bot.alive=false;
-  bot.downed=false;
-  scene.remove(bot.model);
-  setTimeout(()=>{
-    const idx=actors.indexOf(bot);
-    if(idx>-1) actors.splice(idx,1);
-    if(state.playing) spawnBot(bot.team);
-  },900);
-}
-function respawnPlayer(){
-  playerActor.alive=true;
-  playerActor.hp=CFG.player.hp;
-  playerActor.inv={frag:1,smoke:1,molotov:1,medkit:0,plate:0};
-  state.hp=CFG.player.hp;
-  state.armor=CFG.player.armorMax;
-  state.stamina=100;
-  state.respawning=false;
-  camera.position.set(-20+Math.random()*12,CFG.player.standEye,-20+Math.random()*12);
-  velocity.set(0,0,0);
-  controls.lock();
-}
-
-/* ---------- Vision / visual ---------- */
-function isInSmoke(pos){
-  for(const s of smokeClouds){
-    const d=Math.hypot(pos.x-s.pos.x,pos.z-s.pos.z);
-    if(d < s.r*0.95) return true;
-  }
-  return false;
-}
-function hasLOS(from,to){
-  for(const s of smokeClouds){
-    if(segmentSphere(from,to,s.pos,s.r*0.95)) return false;
-  }
-
-  const d=to.clone().sub(from), dist=d.length(); d.normalize();
-  _ray.origin.copy(from); _ray.direction.copy(d);
-  for(const b of wallBoxes){
-    const h=_ray.intersectBox(b,_v3);
-    if(h && h.distanceTo(from)<dist) return false;
-  }
-  return true;
-}
-function segmentSphere(a,b,c,r){
-  const ab=b.clone().sub(a), ac=c.clone().sub(a);
-  const t=Math.max(0,Math.min(1,ac.dot(ab)/ab.lengthSq()));
-  const p=a.clone().addScaledVector(ab,t);
-  return p.distanceTo(c)<=r;
-}
-function updateFPGun(){
-  if(state.isScoped){
-    fpGun.position.lerp(new THREE.Vector3(0,-.13,-.28),0.2);
-    fpGun.rotation.set(0,0,0);
-    camera.fov=48;
-  }else{
-    fpGun.position.lerp(new THREE.Vector3(.28,-.3,-.5),0.2);
-    fpGun.rotation.set(.08,-.05,0);
-    camera.fov=75;
-  }
-  camera.updateProjectionMatrix();
-}
-function updateSmokeVision(){
-  const ov=document.getElementById('smoke-overlay');
-  let maxAlpha=0;
-  const p=camera.position;
-  for(const s of smokeClouds){
-    const d=Math.hypot(p.x-s.pos.x,p.z-s.pos.z);
-    const a=Math.max(0,1-d/(s.r*0.95));
-    if(a>maxAlpha) maxAlpha=a;
-  }
-
-  const alpha=Math.min(0.88,maxAlpha*0.88);
-  ov.style.background=`rgba(200,210,220,${alpha.toFixed(3)})`;
-  ov.style.backdropFilter=`blur(${(alpha*14).toFixed(1)}px)`;
-  document.getElementById('crosshair').style.opacity=(1-alpha*0.95).toFixed(2);
-}
-
-/* ---------- Minimap ---------- */
-function updateMinimap(){
-  const c=document.getElementById('mini-map');
-  const ctx=c.getContext('2d');
-  const w=c.width,h=c.height,half=CFG.mapSize/2;
-  const toMap=(x,z)=>({x:(x+half)/CFG.mapSize*w,y:(z+half)/CFG.mapSize*h});
-
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle='rgba(12,18,24,.86)';
-  ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle='rgba(255,255,255,.25)';
-  ctx.strokeRect(1,1,w-2,h-2);
-
-  // points
-  for(const p of points){
-    const m=toMap(p.pos.x,p.pos.z);
-    ctx.fillStyle=p.owner==='blue'?'#4aa3ff':p.owner==='red'?'#ff4a4a':'#999';
-    ctx.beginPath(); ctx.arc(m.x,m.y,5,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font='10px sans-serif'; ctx.fillText(p.name,m.x+6,m.y-6);
-  }
-
-  for(const s of smokeClouds){
-    const m=toMap(s.pos.x,s.pos.z);
-    ctx.strokeStyle='rgba(180,180,180,.65)';
-    ctx.beginPath(); ctx.arc(m.x,m.y,(s.r/CFG.mapSize)*w,0,Math.PI*2); ctx.stroke();
-  }
-  for(const f of fireZones){
-    const m=toMap(f.pos.x,f.pos.z);
-    ctx.strokeStyle='rgba(255,120,20,.8)';
-    ctx.beginPath(); ctx.arc(m.x,m.y,(f.r/CFG.mapSize)*w,0,Math.PI*2); ctx.stroke();
-  }
-
-  for(const l of lootDrops){
-    const m=toMap(l.pos.x,l.pos.z);
-    ctx.fillStyle=l.type==='ammo'?'#ffdd55':l.type==='armor'?'#55aaff':l.type==='throw'?'#55ff88':l.type==='medkit'?'#ff7777':'#99ccff';
-    ctx.fillRect(m.x-2,m.y-2,4,4);
-  }
-
-  if(pingMarker){
-    const m=toMap(pingMarker.pos.x,pingMarker.pos.z);
-    ctx.strokeStyle='#00ffcc'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(m.x,m.y,7,0,Math.PI*2); ctx.stroke();
-  }
-
-  // actors
-  for(const a of actors){
-    if(!a.alive || a.isPlayer) continue;
-    const p=getActorPos(a), m=toMap(p.x,p.z);
-
-    if(a.team==='blue'){
-      if(a.downed){
-        const blink=(Math.floor(performance.now()/250)%2)===0;
-        if(blink){
-          ctx.strokeStyle='#ffd84a'; ctx.lineWidth=2;
-          ctx.beginPath(); ctx.moveTo(m.x-4,m.y); ctx.lineTo(m.x+4,m.y); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(m.x,m.y-4); ctx.lineTo(m.x,m.y+4); ctx.stroke();
+    function calculateE(x, y) {
+        let Ex = 0, Ey = 0;
+        for (let charge of charges) {
+            let dx = x - charge.x, dy = y - charge.y;
+            let r2 = dx*dx + dy*dy;
+            if (r2 < 150) r2 = 150; 
+            let r = Math.sqrt(r2);
+            let E_mag = (K * charge.Q) / r2; 
+            Ex += E_mag * (dx / r); Ey += E_mag * (dy / r);
         }
-      }else{
-        drawArrow(ctx,m.x,m.y,a.lastYaw||a.model.rotation.y,'#63b2ff');
-      }
-    }else{
-      // UAV开启时全显；不开UAV时仅近距离显示
-      const dToPlayer = getActorPos(a).distanceTo(camera.position);
-      if(state.uavTime>0 || dToPlayer<35){
-        ctx.fillStyle='#ff6b6b';
-        ctx.beginPath(); ctx.arc(m.x,m.y,2.7,0,Math.PI*2); ctx.fill();
-      }
+        return { Ex, Ey };
     }
-  }
 
-  const pm=toMap(camera.position.x,camera.position.z);
-  ctx.fillStyle='#00ffcc';
-  ctx.beginPath(); ctx.arc(pm.x,pm.y,4.5,0,Math.PI*2); ctx.fill();
+    function calculatePhi(x, y) {
+        let phi = 0;
+        for (let charge of charges) {
+            let dx = x - charge.x, dy = y - charge.y;
+            let r = Math.sqrt(dx*dx + dy*dy);
+            if (r < 15) r = 15; 
+            phi += (K * charge.Q) / r; 
+        }
+        return phi;
+    }
 
-  const dir=getViewDir();
-  const ang=Math.atan2(dir.z,dir.x);
-  const fov=Math.PI/6;
-  ctx.fillStyle='rgba(0,255,204,.15)';
-  ctx.beginPath();
-  ctx.moveTo(pm.x,pm.y);
-  ctx.arc(pm.x,pm.y,22,ang-fov,ang+fov);
-  ctx.closePath();
-  ctx.fill();
-}
-function drawArrow(ctx,x,y,yaw,color){
-  const len=7;
-  const dx=Math.sin(yaw)*len, dz=Math.cos(yaw)*len;
-  ctx.strokeStyle=color; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+dx,y+dz); ctx.stroke();
+    function drawHeatmap() {
+        const step = 8; 
+        ctx.globalAlpha = 0.6;
+        for (let x = 0; x < width; x += step) {
+            for (let y = 0; y < height; y += step) {
+                let phi = calculatePhi(x, y);
+                let intensity = Math.tanh(phi / 4000); 
+                if (intensity > 0) ctx.fillStyle = `rgba(239, 68, 68, ${intensity})`;
+                else if (intensity < 0) ctx.fillStyle = `rgba(14, 165, 233, ${-intensity})`;
+                else continue;
+                ctx.fillRect(x, y, step, step);
+            }
+        }
+        ctx.globalAlpha = 1.0;
+    }
 
-  const a=Math.atan2(dz,dx), h=3.5;
-  ctx.beginPath();
-  ctx.moveTo(x+dx,y+dz);
-  ctx.lineTo(x+dx-h*Math.cos(a-0.5),y+dz-h*Math.sin(a-0.5));
-  ctx.lineTo(x+dx-h*Math.cos(a+0.5),y+dz-h*Math.sin(a+0.5));
-  ctx.closePath();
-  ctx.fillStyle=color; ctx.fill();
-}
+    function drawFieldLines() {
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        const numLines = 26; 
+        const maxSteps = 1200; 
+        const ds = 4;
 
-/* ---------- HUD ---------- */
-function updateHUD(){
-  document.getElementById('my-kills').innerText=state.myKills;
-  document.getElementById('health-fill').style.width=Math.max(0,state.hp)+'%';
-  document.getElementById('armor-fill').style.width=Math.max(0,state.armor/CFG.player.armorMax*100)+'%';
-  document.getElementById('stamina-fill').style.width=Math.max(0,state.stamina)+'%';
-  document.getElementById('ammo-cur').innerText=state.reloading?'...':state.ammo;
-  document.getElementById('score-blue').innerText=`蓝队 ${state.scoreBlue}`;
-  document.getElementById('score-red').innerText=`红队 ${state.scoreRed}`;
-  document.getElementById('mode-text').innerText=`模式：${state.fireMode==='auto'?'全自动':'半自动'}`;
+        charges.forEach(charge => {
+            let isOnlyNegative = charges.every(c => c.sign < 0);
+            if (charge.sign < 0 && !isOnlyNegative) return;
+            let startSign = isOnlyNegative ? -1 : 1;
 
-  const inv=playerActor?.inv||{frag:1,smoke:1,molotov:1,medkit:0,plate:0};
-  document.getElementById('inv-text').innerText=`投掷：F手雷(${inv.frag}) G烟雾(${inv.smoke}) V燃烧(${inv.molotov})`;
-  document.getElementById('extra-text').innerText=`补给：6医疗包(${inv.medkit}) 7护甲板(${inv.plate}) ｜ X UAV(${state.uavCharges}) ｜ Z 标记点`;
-}
-function showKillMsg(t){
-  const f=document.getElementById('kill-feed');
-  const m=document.createElement('div');
-  m.className='kill-msg';
-  m.innerText=t;
-  f.appendChild(m);
-  setTimeout(()=>m.remove(),3000);
-}
-function showHitMarker(head){
-  const hm=document.getElementById('hit-marker');
-  hm.style.opacity='1';
-  hm.style.filter=head?'drop-shadow(0 0 6px #ff5555)':'drop-shadow(0 0 4px #fff)';
-  setTimeout(()=>hm.style.opacity='0',65);
-}
-function flashDamage(){
-  const o=document.getElementById('damage-overlay');
-  o.style.boxShadow='inset 0 0 55px 22px rgba(255,0,0,.46)';
-  setTimeout(()=>o.style.boxShadow='inset 0 0 0 0 rgba(255,0,0,0)',120);
-}
+            for (let i = 0; i < numLines; i++) {
+                let angle = (i / numLines) * Math.PI * 2;
+                let px = charge.x + Math.cos(angle) * (charge.radius + 1);
+                let py = charge.y + Math.sin(angle) * (charge.radius + 1);
+                
+                ctx.beginPath(); ctx.moveTo(px, py);
+                let isEscaped = false;
+                
+                for (let step = 0; step < maxSteps; step++) {
+                    let field = calculateE(px, py);
+                    let E_mag = Math.sqrt(field.Ex*field.Ex + field.Ey*field.Ey);
+                    if (E_mag < 0.01) break; 
 
-/* ---------- misc ---------- */
-function getActorPos(a){ return a.isPlayer ? camera.position : a.model.position; }
-function getAimPos(a){ const p=getActorPos(a).clone(); p.y+=a.isPlayer?0.05:1.45; return p; }
-function getViewDir(){ const d=new THREE.Vector3(); camera.getWorldDirection(d); return d.normalize(); }
-function forwardFromYaw(yaw){ return new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)).normalize(); }
+                    px += (field.Ex / E_mag) * startSign * ds; 
+                    py += (field.Ey / E_mag) * startSign * ds;
+                    ctx.lineTo(px, py);
 
-function nearestToPoint(list,pos){
-  let best=null,md=1e9;
-  for(const a of list){
-    const d=getActorPos(a).distanceTo(pos);
-    if(d<md){md=d;best=a;}
-  }
-  return best;
-}
-function aliveById(id){
-  const a=actors.find(x=>x.id===id);
-  return !!a && a.alive;
-}
-function endMatch(title){
-  state.playing=false;
-  controls.unlock();
-  throwPreviewLine.visible=false;
-  reviveTip.style.display='none';
-  const m=document.getElementById('menu-screen');
-  m.style.display='flex';
-  m.querySelector('h1').innerText=title;
-  const b=document.getElementById('start-btn');
-  b.innerText='再来一局';
-  b.onclick=()=>location.reload();
-}
-function rand(a,b){ return a+Math.random()*(b-a); }
+                    if (px < 0 || px > width || py < 0 || py > height) break;
+                    for (let other of charges) {
+                        if (other === charge) continue;
+                        let d2 = (px-other.x)**2 + (py-other.y)**2;
+                        if (d2 < other.radius**2) { isEscaped = true; break; }
+                    }
+                    if (isEscaped) break;
+                }
+                ctx.strokeStyle = charge.sign > 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(14, 165, 233, 0.5)';
+                ctx.stroke();
+            }
+        });
+    }
 
-/* ---------- audio ---------- */
-function ensureAudio(){
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended') audioCtx.resume();
-}
-function playSound(type){
-  ensureAudio();
-  const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  const t=audioCtx.currentTime;
-  if(type==='shoot'){
-    osc.type='sawtooth';
-    osc.frequency.setValueAtTime(185,t);
-    osc.frequency.exponentialRampToValueAtTime(0.01,t+.07);
-    gain.gain.setValueAtTime(.2,t);
-    gain.gain.exponentialRampToValueAtTime(.01,t+.07);
-    osc.start(t); osc.stop(t+.07);
-  }else{
-    osc.type='triangle';
-    osc.frequency.setValueAtTime(280,t);
-    osc.frequency.linearRampToValueAtTime(520,t+.2);
-    gain.gain.setValueAtTime(.08,t);
-    gain.gain.linearRampToValueAtTime(0,t+.32);
-    osc.start(t); osc.stop(t+.32);
-  }
-}
+    function drawProbe() {
+        if (!probeEnabled) return;
+        ctx.beginPath();
+        ctx.moveTo(mouseX - 18, mouseY); ctx.lineTo(mouseX + 18, mouseY);
+        ctx.moveTo(mouseX, mouseY - 18); ctx.lineTo(mouseX, mouseY + 18);
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 5, 0, Math.PI*2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+
+        let field = calculateE(mouseX, mouseY);
+        let E_mag = Math.sqrt(field.Ex*field.Ex + field.Ey*field.Ey);
+        let phi = calculatePhi(mouseX, mouseY);
+        
+        document.getElementById('p-x').innerText = Math.round(mouseX);
+        document.getElementById('p-y').innerText = Math.round(mouseY);
+        document.getElementById('p-e').innerText = (E_mag / 1000).toFixed(1) + " ×10³";
+        document.getElementById('p-v').innerText = Math.round(phi);
+        
+        let hud = document.getElementById('probe-hud');
+        let hudX = mouseX + 20;
+        let hudY = mouseY + 20;
+        if (hudX > width - 260) hudX = mouseX - 260;
+        if (hudY > height - 160) hudY = mouseY - 160;
+
+        hud.style.left = hudX + 'px';
+        hud.style.top = hudY + 'px';
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-color');
+        ctx.fillRect(0, 0, width, height); 
+
+        if (document.getElementById('t-heat').checked) drawHeatmap();
+        if (document.getElementById('t-lines').checked) drawFieldLines();
+
+        // 统一物理步长
+        const dt = 0.6;
+        for (let i = testParticles.length - 1; i >= 0; i--) {
+            let p = testParticles[i];
+            p.update(dt); 
+            p.draw(ctx);
+            // 这里保留了死亡粒子的显示判断
+            if (!p.isAlive && !isPaused) testParticles.splice(i, 1);
+        }
+
+        charges.forEach(charge => charge.draw(ctx));
+        drawProbe();
+
+        requestAnimationFrame(animate);
+    }
+
+    // --- 用户控制命令流 ---
+    function injectCustomCharge() {
+        let x = parseFloat(document.getElementById('inp-x').value);
+        let y = parseFloat(document.getElementById('inp-y').value);
+        let q = parseFloat(document.getElementById('inp-q').value);
+        let sign = parseInt(document.getElementById('inp-sign').value);
+        
+        if (isNaN(x) || isNaN(y) || isNaN(q)) {
+            alert("坐标和电荷量必须输入有效数字！"); return;
+        }
+        charges.push(new SourceCharge(x, y, sign, q));
+    }
+
+    function clearAll() {
+        charges = []; testParticles = [];
+    }
+
+    function presetDipole() {
+        clearAll();
+        charges.push(new SourceCharge(width / 2 - 200, height / 2, 1));
+        charges.push(new SourceCharge(width / 2 + 200, height / 2, -1));
+    }
+
+    function presetSame() {
+        clearAll();
+        charges.push(new SourceCharge(width / 2 - 200, height / 2, 1));
+        charges.push(new SourceCharge(width / 2 + 200, height / 2, 1));
+    }
+
+    function spawnTestParticle(sign) {
+        // 在屏幕特定区域随机发射，避开UI重叠区
+        let x = width / 2 + (Math.random() - 0.5) * 200;
+        let y = height / 2 - 300;
+        testParticles.push(new TestParticle(x, y, sign));
+    }
+
+    function toggleProbe() {
+        probeEnabled = !probeEnabled;
+        let btn = document.getElementById('btn-probe');
+        let hud = document.getElementById('probe-hud');
+        if (probeEnabled) {
+            btn.style.background = '#38bdf8'; btn.style.color = '#fff';
+            hud.style.display = 'block';
+        } else {
+            btn.style.background = 'rgba(56,189,248,0.15)'; btn.style.color = '';
+            hud.style.display = 'none';
+        }
+    }
+
+    // --- 题库系统 ---
+    function openQuiz() { document.getElementById('quizModal').style.display = 'flex'; }
+    function closeQuiz() { document.getElementById('quizModal').style.display = 'none'; }
+    
+    function checkAnswer(qId, btn, isCorrect) {
+        let block = document.getElementById(qId);
+        let btns = block.querySelectorAll('.opt-btn');
+        let exp = block.querySelector('.explanation');
+        
+        btns.forEach(b => {
+            b.disabled = true; b.style.cursor = 'default'; b.classList.remove('correct', 'wrong');
+        });
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            btns.forEach(b => { if(b.getAttribute('onclick').includes('true')) b.classList.add('correct'); });
+        }
+        exp.style.display = 'block';
+    }
+
+    // --- 鼠标拖拽控制 ---
+    canvas.addEventListener('mousedown', (e) => {
+        let rect = canvas.getBoundingClientRect();
+        let mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        for (let i = charges.length - 1; i >= 0; i--) {
+            let charge = charges[i];
+            let dx = mx - charge.x, dy = my - charge.y;
+            if (dx*dx + dy*dy < (charge.radius * 2.5)**2) {
+                isDragging = true; draggedCharge = charge; break;
+            }
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX; mouseY = e.clientY;
+        if (!isDragging || !draggedCharge) return;
+        draggedCharge.x = mouseX; draggedCharge.y = mouseY;
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; draggedCharge = null; });
+
+    // 初始化运行
+    setupCanvas();
+    presetDipole();
+    requestAnimationFrame(animate);
+
 </script>
 </body>
 </html>
